@@ -1,0 +1,43 @@
+# --- Python virtual environment ---
+venv/
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- System files and editors ---
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
+
+# --- React project (frontend/) ---
+# Dependencies
+/frontend/node_modules/
+
+# Build outputs
+/frontend/build/
+/frontend/dist/
+
+# Environment variables
+/frontend/.env*
+# e.g.: .env.local, .env.development.local, .env.test.local, .env.production.local
+
+# Test caches and reports
+/frontend/coverage/
+/frontend/.eslintcache
+
+# npm / yarn logs
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+
+# Lockfiles (optional if you prefer not to version them)
+/frontend/package-lock.json
+/frontend/yarn.lock
+
+# IDEs and editors (optional)
+/frontend/.vscode/
+/frontend/.idea/
+

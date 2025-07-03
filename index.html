@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control de Sensores - Industria 4.0</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    button { margin: 5px; padding: 10px 20px; }
+    pre { background: #f4f4f4; padding: 10px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Panel de Sensores</h1>
+  <button id="btn-simulate">Simular y Guardar</button>
+  <button id="btn-all">Obtener Todas las Lecturas</button>
+  <button id="btn-latest">Obtener Última Lectura</button>
+
+  <h2>Resultado:</h2>
+  <pre id="output">Aquí se mostrará la respuesta</pre>
+
+  <script>
+    const apiBase = 'http://localhost:8000';
+    const output = document.getElementById('output');
+
+    document.getElementById('btn-simulate').addEventListener('click', async () => {
+      try {
+        const res = await fetch(`${apiBase}/simulate`, { method: 'POST' });
+        const data = await res.json();
+        output.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        output.textContent = 'Error: ' + err;
+      }
+    });
+
+    document.getElementById('btn-all').addEventListener('click', async () => {
+      try {
+        const res = await fetch(`${apiBase}/readings`);
+        const data = await res.json();
+        output.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        output.textContent = 'Error: ' + err;
+      }
+    });
+
+    document.getElementById('btn-latest').addEventListener('click', async () => {
+      try {
+        const res = await fetch(`${apiBase}/readings/latest`);
+        if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+        const data = await res.json();
+        output.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        output.textContent = 'Error: ' + err;
+      }
+    });
+  </script>
+</body>
+</html>
