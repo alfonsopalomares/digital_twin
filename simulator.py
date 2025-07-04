@@ -13,7 +13,7 @@ from storage import LocalStorage
 # Configuration constants:
 AVG_FLOW_RATE_DEFAULT = 0.5    # L/h per user (average flow rate)
 TIME_CONVERSION = 60.0         # minutes in an hour (for L/h to L/min)
-TEMPERATURE_MEAN = 25.0        # °C (baseline temperature)
+TEMPERATURE_MEAN = 60.0        # °C (baseline temperature)
 TEMPERATURE_VARIATION = 1.0    # °C (± range for temperature simulation)
 LEVEL_MIN = 0.0                # lower bound for tank level (proportion)
 LEVEL_MAX = 1.0                # upper bound for tank level (proportion)

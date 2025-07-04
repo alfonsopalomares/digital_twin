@@ -113,7 +113,7 @@ function SimulatePage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`${apiBase}/readings`);
+        const res = await fetch(`${apiBase}/readings/readings`);
         setReadings(await res.json());
       } catch (err) {
         console.error(err);
@@ -137,8 +137,8 @@ function SimulatePage() {
   const handleSimulate = async () => {
     const now = new Date();
     try {
-      await fetch(`${apiBase}/simulations/simulate?hours=${hours}&users=${users}`, { method: 'POST' });
-      const res = await fetch(`${apiBase}/readings`);
+      await fetch(`${apiBase}/simulate/simulate?hours=${hours}&users=${users}`, { method: 'POST' });
+      const res = await fetch(`${apiBase}/readings/readings`);
       setReadings(await res.json());
       const utc = now.toISOString();
       const local = now.toLocaleString(lang);
@@ -154,7 +154,7 @@ function SimulatePage() {
   // Clear all data
   const handleClear = async () => {
     try {
-      await fetch(`${apiBase}/readings`, { method: 'DELETE' });
+      await fetch(`${apiBase}/readings/readings`, { method: 'DELETE' });
       setReadings([]);
       setNotification(lang === 'es' ? 'Datos eliminados' : 'Data cleared');
       setBannerVisible(true);
