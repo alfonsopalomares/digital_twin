@@ -2,8 +2,8 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Dict, Any
-import datetime
+from typing import List, Dict, Any, Optional
+
 
 # Import modules
 from simulator import SensorSimulator
@@ -11,6 +11,7 @@ from storage import LocalStorage
 
 # Import API endpoints
 from api_metrics_endpoints import router as metrics_router
+from api_simulate_endpoints import router as simulate_router
 from anomalies import detect_anomalies as fetch_anomalies
 from settings import *
 
@@ -35,7 +36,6 @@ simulator = SensorSimulator(avg_flow_rate=0.5)
 storage = LocalStorage()
 
 
-
 # Modelo de anomalía
 class Anomaly(BaseModel):
     sensor: str
@@ -50,9 +50,12 @@ def api_root():
     return {
         "readings": "/readings",
         "reading_latest": "/readings/latest",
-        "simulate": "/simulate?hours={hours}&users={users}",
         "delete_readings": "/readings (DELETE)",
         "anomalies": "/anomalies",
+        "simulations": {
+            "simulate": "/simulate?hours={hours}&users={users}",
+            "simulate_scenarios": "/simulate_scenarios?duration_hours={duration_hours}"
+        },
         "metrics": {
             "availability": "/metrics/availability?start={ISO}&end={ISO}",
             "performance": "/metrics/performance?users={n}&hours={h}",
@@ -87,50 +90,6 @@ def get_latest_reading():
         raise HTTPException(status_code=500, detail="Malformed reading data")
     return result
 
-@app.post('/simulate')
-async def simulate_usage(
-    hours: int = Query(8, ge=1, description="Simulation duration in hours"),
-    users: int = Query(10, ge=1, description="Number of active users"),
-    sensor: str = Query(None, description="(Optional) Specific sensor to simulate"),
-    value: float = Query(None, description="(Optional) Override value for the sensor"),
-    timestamp: str = Query(None, description="(Optional) ISO timestamp to use for simulation")
-):
-    """
-    Simulate continuous data for `hours` hours and `users` users.
-    Optional parameters `sensor`, `value`, `timestamp` override generate_frame behavior.
-
-    - If `sensor` is set, only that sensor is generated per timestamp.
-    - If `value` is provided, it overrides the simulated value for the given sensor.
-    - If `timestamp` is provided, it overrides the generated timestamp; otherwise current UTC is used.
-    """
-    total_minutes = hours * 60
-    now = datetime.datetime.utcnow()
-    for minute in range(total_minutes):
-        ts = timestamp or (now + datetime.timedelta(minutes=minute)).isoformat()
-        # Pass sensor and value overrides into generate_frame
-        batch = simulator.generate_frame(
-            timestamp=ts,
-            users=users,
-            sensor=sensor,
-            value=value
-        )
-        # Store batch in DB
-        storage.save_batch(batch)
-    return {
-        "status": "ok",
-        "hours": hours,
-        "users": users,
-        "sensor_override": sensor,
-        "value_override": value,
-        "timestamp_override": bool(timestamp),
-        "generated_records": total_minutes * simulator.sensors_count
-    }
-
-@app.delete('/readings')
-def delete_readings():
-    """Deletes all stored sensor readings."""
-    storage.clear_all()
-    return {"status": "deleted"}
-
 
 app.include_router(metrics_router)
+app.include_router(simulate_router)

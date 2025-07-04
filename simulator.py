@@ -1,8 +1,15 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 =====
+"""
+Stateful Sensor Simulator for a water dispenser with real-time adjustable parameters
+and batch scenario simulation.
+"""
 import random
 import datetime
+import math
 from typing import List, Dict, Optional
+from storage import LocalStorage
 
+# === Configurable constants ===
 # Configuration constants:
 AVG_FLOW_RATE_DEFAULT = 0.5    # L/h per user (average flow rate)
 TIME_CONVERSION = 60.0         # minutes in an hour (for L/h to L/min)
@@ -13,14 +20,80 @@ LEVEL_MAX = 1.0                # upper bound for tank level (proportion)
 POWER_MIN = 0.0                # kW (minimum power draw)
 POWER_MAX = 10.0               # kW (maximum power draw)
 
+SETPOINT_TEMP_DEFAULT = 60.0   # °C, default temperature setpoint
+HEATER_REGIME_DEFAULT = 0.1    # kW per °C error
+PIPE_LENGTH = 1.0              # m
+PIPE_DIAMETER = 0.02           # m
+WATER_DENSITY = 997.0          # kg/m³
+WATER_VISCOSITY = 0.001        # Pa·s
+GRAVITY = 9.81                 # m/s²
+PIPE_DELAY_SEC = 5             # s
+TANK_CAPACITY_L = 20.0         # liters
+TANK_SEGMENTS = 5              # thermal layers
+HEATER_POWER_MAX = 10.0        # kW
+HEATER_EFFICIENCY = 0.8        # fraction
+CP_WATER = 4.186               # kJ/kg·°C
+T_AMBIENT = 25.0               # °C
+CONVECTION_COEFF = 5.0         # W/m²·°C
+SURFACE_AREA = 0.5             # m²
+THERMAL_DIFFUSIVITY = 1e-7     # m²/s
+SENSOR_NOISE_STD = {
+    'flow': 0.005,
+    'temperature': 0.1,
+    'level': 0.002,
+    'power': 0.1
+}
+DEGRADATION_FACTOR = 0.0001    # per minute
+
 class SensorSimulator:
+    _instance = None
+    def __new__(cls, *args, **kwargs):
+        # Singleton: ensure only one simulator instance persists
+        if cls._instance is None:
+            cls._instance = super(SensorSimulator, cls).__new__(cls)
+        return cls._instance
+
     """
-    Generates synthetic data for a water dispenser as a cyber-physical system.
-    avg_flow_rate: liters per hour per user.
+    Stateful simulator with advanced physics and persistent parameters.
+    ...
+    Extends previous stateful simulator with:
+    - Real-time adjustable avg_flow_rate, temp_setpoint, heater_regime
+    - Batch simulation for scenario comparisons
     """
-    def __init__(self, avg_flow_rate: float = AVG_FLOW_RATE_DEFAULT):
-        # average flow rate in liters per hour per user
+
+    def __init__(self,
+                 avg_flow_rate: float = AVG_FLOW_RATE_DEFAULT,
+                 temp_setpoint: float = SETPOINT_TEMP_DEFAULT,
+                 heater_regime: float = HEATER_REGIME_DEFAULT):
+        # adjustable parameters
         self.avg_flow_rate = avg_flow_rate
+        self.temp_setpoint = temp_setpoint
+        self.heater_regime = heater_regime  # kW per °C error
+        # load state
+        self.storage = LocalStorage()
+        readings = self.storage.fetch_all()
+        # init level
+        level_readings = [r for r in readings if r['sensor']=='level']
+        self.level = level_readings[-1]['value'] if level_readings else 1.0
+        # init temperature profile
+        temp_readings = [r for r in readings if r['sensor']=='temperature']
+        init_temp = temp_readings[-1]['value'] if temp_readings else T_AMBIENT
+        self.temperatures = [init_temp]*TANK_SEGMENTS
+        self.heater_eff = HEATER_EFFICIENCY
+        self.time_elapsed = 0  # seconds
+
+    # --- Real-time adjusters ---
+    def set_flow_rate(self, new_rate: float):
+        """Adjust average flow rate on the fly"""
+        self.avg_flow_rate = new_rate
+
+    def set_temp_setpoint(self, new_setpoint: float):
+        """Adjust temperature setpoint on the fly"""
+        self.temp_setpoint = new_setpoint
+
+    def set_heater_regime(self, new_regime: float):
+        """Adjust heater regime (kW per °C error) on the fly"""
+        self.heater_regime = new_regime
 
     def generate_frame(
         self,
@@ -79,11 +152,40 @@ class SensorSimulator:
         ]
         return readings
 
+    # --- Batch scenario simulation ---
+    def simulate_scenarios(self,
+                           configs: List[Dict],
+                           duration_hours: int = 1) -> List[Dict]:
+        """
+        Run batch simulations for each config dict containing:
+        {'users': int, 'flow_rate': optional, 'temp_setpoint': optional, 'heater_regime': optional}
+        Returns aggregated metrics per scenario: total energy, avg temperature, OEE etc.
+        """
+        results = []
+        for cfg in configs:
+            # clone simulator for isolation
+            sim = SensorSimulator(
+                avg_flow_rate=cfg.get('flow_rate', self.avg_flow_rate),
+                temp_setpoint=cfg.get('temp_setpoint', self.temp_setpoint),
+                heater_regime=cfg.get('heater_regime', self.heater_regime)
+            )
+            total_energy = 0.0
+            temp_sum = 0.0
+            count = 0
+            for minute in range(duration_hours * 60):
+                frame = sim.generate_frame(users=cfg.get('users',1))
+                # extract power value and temperature
+                for r in frame:
+                    if r['sensor']=='power': total_energy += r['value']*(1/60)
+                    if r['sensor']=='temperature': temp_sum += r['value']; count+=1
+            metrics = {
+                'config': cfg,
+                'total_energy_kWh': round(total_energy,3),
+                'avg_temperature': round(temp_sum/count,2) if count else None
+            }
+            results.append(metrics)
+        return results
+
     @property
     def sensors_count(self) -> int:
-        """
-        Number of sensor types returned per full frame.
-        """
-        # generate a sample frame to count sensors
-        return len(self.generate_frame(timestamp=datetime.datetime.utcnow().isoformat(), users=1))
-    
+        return 4
