@@ -20,8 +20,7 @@ Este proyecto implementa un sistema de expendedor de agua inteligente inspirado 
 cd backend
 python3 -m venv venv
 source venv/bin/activate    # Windows: venv\\Scripts\\activate
-pip install --upgrade pip
-pip install fastapi uvicorn pydantic sqlite3
+pip install -i requirements.txt
 ```
 
 ### Ejecución
@@ -111,6 +110,8 @@ La función `generate_frame(timestamp, users, sensor, value)` permite:
 - `sensor`: Generar solo ese sensor.
 - `value`: Anular valor simulado si no es `None`.
 
+
 ---
 
-¡Listo! README.md actualizado con todos los detalles e introducción.
+Este README provee una revisión comprensible del proyecto, como instalar y correr, tanto el frontend como el backend. Además muestra un detalle de las APIs.
+Feliz monitoreo!  🚰📊

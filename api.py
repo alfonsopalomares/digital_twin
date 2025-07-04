@@ -89,24 +89,41 @@ def get_latest_reading():
 
 @app.post('/simulate')
 async def simulate_usage(
-    hours: int = Query(8, ge=1, description="Cantidad de horas a simular"),
-    users: int = Query(10, ge=1, description="Número de usuarios activos"),
+    hours: int = Query(8, ge=1, description="Simulation duration in hours"),
+    users: int = Query(10, ge=1, description="Number of active users"),
+    sensor: str = Query(None, description="(Optional) Specific sensor to simulate"),
+    value: float = Query(None, description="(Optional) Override value for the sensor"),
+    timestamp: str = Query(None, description="(Optional) ISO timestamp to use for simulation")
 ):
     """
-    Simula generación continua de datos durante `hours` horas
-    con `users` usuarios simultáneos.
+    Simulate continuous data for `hours` hours and `users` users.
+    Optional parameters `sensor`, `value`, `timestamp` override generate_frame behavior.
+
+    - If `sensor` is set, only that sensor is generated per timestamp.
+    - If `value` is provided, it overrides the simulated value for the given sensor.
+    - If `timestamp` is provided, it overrides the generated timestamp; otherwise current UTC is used.
     """
     total_minutes = hours * 60
     now = datetime.datetime.utcnow()
     for minute in range(total_minutes):
-        ts = (now + datetime.timedelta(minutes=minute)).isoformat()
-        batch = simulator.generate_frame(timestamp=ts, users=users)
+        ts = timestamp or (now + datetime.timedelta(minutes=minute)).isoformat()
+        # Pass sensor and value overrides into generate_frame
+        batch = simulator.generate_frame(
+            timestamp=ts,
+            users=users,
+            sensor=sensor,
+            value=value
+        )
+        # Store batch in DB
         storage.save_batch(batch)
     return {
         "status": "ok",
         "hours": hours,
         "users": users,
-        "generated_records": total_minutes * users * simulator.sensors_count
+        "sensor_override": sensor,
+        "value_override": value,
+        "timestamp_override": bool(timestamp),
+        "generated_records": total_minutes * simulator.sensors_count
     }
 
 @app.delete('/readings')
