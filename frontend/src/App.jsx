@@ -4,6 +4,7 @@ import MainPage from './MainPage';
 import SimulatePage from './SimulatePage';
 import AnalyticsPage from './AnalyticsPage';
 import AnomaliesPage from './AnomaliesPage';
+import MetricsPage from './MetricsPage';
 
 // Justo antes de tu componente App
 const menuStyle = {
@@ -32,8 +33,8 @@ export default function App() {
   return (
     <>
       <nav style={menuStyle}>
-        {['/', '/simulate', '/analytics', '/anomalies'].map((to, idx) => {
-          const text = ['Home', 'Simulación', 'Analytics', 'Anomalías'][idx];
+        {['/', '/simulate', '/analytics', '/anomalies', '/metrics'].map((to, idx) => {
+          const text = ['Home', 'Simulación', 'Analytics', 'Anomalías', 'Metrics'][idx];
           return (
             <Link
               key={to}
@@ -52,6 +53,7 @@ export default function App() {
         <Route path="/simulate" element={<SimulatePage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/anomalies" element={<AnomaliesPage />} />
+        <Route path="/metrics" element={<MetricsPage />} />
       </Routes>
     </>
   );

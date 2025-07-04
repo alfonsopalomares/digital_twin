@@ -14,7 +14,7 @@ export default function MainPage() {
         <li><Link to="/simulate">Ir a Simulación</Link></li>
         <li><Link to="/analytics">Ir a Analytics</Link></li>
         <li><Link to="/anomalies">Ir a Anomalías</Link></li>
-        <li><Link to="/">Ir a Métricas OEE Adaptadas (FALTA DESARROLLAR)</Link></li>
+        <li><Link to="/metrics">Ir a Métricas OEE Adaptadas</Link></li>
         <li><Link to="/">Ir a Escenarios de Uso y Configuraciones (FALTA DESARROLLAR)</Link></li>
       </ul>
     </div>
