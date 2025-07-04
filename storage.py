@@ -55,7 +55,7 @@ class LocalStorage:
 
     def fetch_all(self) -> List[Dict]:
         c = self.conn.cursor()
-        c.execute('SELECT sensor, timestamp, value FROM sensor_data')
+        c.execute('SELECT sensor, timestamp, value FROM sensor_data ORDER BY timestamp DESC')
         rows = c.fetchall()
         return [{'sensor': r[0], 'timestamp': r[1], 'value': r[2]} for r in rows]
 
