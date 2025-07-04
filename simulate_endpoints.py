@@ -12,7 +12,7 @@ from simulator import SensorSimulator
 from anomalies import detect_anomalies as fetch_anomalies
 from settings import *
 
-router = APIRouter(prefix="/simulate")
+router = APIRouter(prefix="/simulate", tags=["Simulate"])
 storage = LocalStorage()
 simulator = SensorSimulator()
 
@@ -90,10 +90,6 @@ async def simulate_scenarios(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.delete('/readings')
-def delete_readings():
-    """Deletes all stored sensor readings."""
-    storage.clear_all()
-    return {"status": "deleted"}
+
 
 

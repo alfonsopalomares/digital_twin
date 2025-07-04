@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
-
 
 # Import modules
 from simulator import SensorSimulator
 from storage import LocalStorage
 
 # Import API endpoints
-from api_metrics_endpoints import router as metrics_router
-from api_simulate_endpoints import router as simulate_router
-from anomalies import detect_anomalies as fetch_anomalies
+from metrics_endpoints import router as metrics_router
+from simulate_endpoints import router as simulate_router
+from anomalies_endpoints import router as anomalies_router
+from readings_endpoints import router as readings_router
+
 from settings import *
 
 app = FastAPI()
@@ -25,33 +24,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Model for serializing sensor readings
-class SensorReading(BaseModel):
-    sensor: str
-    timestamp: str
-    value: float
 
 # Instancias únicas de simulador y almacenamiento
 simulator = SensorSimulator(avg_flow_rate=0.5)
 storage = LocalStorage()
 
 
-# Modelo de anomalía
-class Anomaly(BaseModel):
-    sensor: str
-    timestamp: str
-    value: float
-    type: str
-    detail: str
-
-
 @app.get("/")
 def api_root():
     return {
-        "readings": "/readings",
-        "reading_latest": "/readings/latest",
-        "delete_readings": "/readings (DELETE)",
-        "anomalies": "/anomalies",
+        "readings": {
+            "all": "/readings",
+            "latest": "/readings/latest",
+            "delete": "/readings (DELETE)"
+        },
+        "anomalies": {
+            "static": "/anomalies/static",
+            "adaptive": "/anomalies/adaptive?sensor={sensor}&window={window}",
+            "classify": "/anomalies/classify?sensor={sensor}&window={window}"
+        },
         "simulations": {
             "simulate": "/simulate?hours={hours}&users={users}",
             "simulate_scenarios": "/simulate_scenarios?duration_hours={duration_hours}"
@@ -70,26 +61,10 @@ def api_root():
         }
     }
 
-@app.get("/anomalies", response_model=List[Anomaly])
-def get_anomalies():
-    return fetch_anomalies()
 
-
-@app.get('/readings', response_model=List[SensorReading])
-def get_readings():
-    """Returns all stored sensor readings."""
-    return storage.fetch_all() or []
-
-@app.get('/readings/latest', response_model=SensorReading)
-def get_latest_reading():
-    """Returns the most recent stored reading."""
-    result = storage.fetch_latest()
-    if not result:
-        raise HTTPException(status_code=404, detail="No readings found")
-    if not all(k in result for k in ("sensor", "timestamp", "value")):
-        raise HTTPException(status_code=500, detail="Malformed reading data")
-    return result
 
 
 app.include_router(metrics_router)
 app.include_router(simulate_router)
+app.include_router(anomalies_router)
+app.include_router(readings_router)

@@ -37,7 +37,7 @@ export default function AnalyticsDashboard() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch(`${API_BASE}/readings`);
+        const res = await fetch(`${API_BASE}/readings/readings`);
         const all = await res.json();
         // ordenar por timestamp
         const sorted = all.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
