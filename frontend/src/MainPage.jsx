@@ -1,27 +1,4 @@
-/*
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import MainPage from './MainPage';
-import AnalyticsPage from './AnalyticsPage';
 
-function App() {
-  return (
-    <Router>
-      <nav style={{ padding: 16, borderBottom: '1px solid #ccc' }}>
-        <Link to="/" style={{ marginRight: 16 }}>Home</Link>
-        <Link to="/analytics">Analytics</Link>
-      </nav>
-      <Routes>
-        <Route path="/" element={<MainPage />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
-      </Routes>
-    </Router>
-  );
-}
-
-export default App;
-
-*/
 
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -36,6 +13,9 @@ export default function MainPage() {
       <ul>
         <li><Link to="/simulate">Ir a Simulación</Link></li>
         <li><Link to="/analytics">Ir a Analytics</Link></li>
+        <li><Link to="/anomalies">Ir a Anomalías</Link></li>
+        <li><Link to="/">Ir a Métricas OEE Adaptadas (FALTA DESARROLLAR)</Link></li>
+        <li><Link to="/">Ir a Escenarios de Uso y Configuraciones (FALTA DESARROLLAR)</Link></li>
       </ul>
     </div>
   );
