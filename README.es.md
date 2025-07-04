@@ -13,62 +13,89 @@ Este proyecto implementa un sistema de expendedor de agua inteligente inspirado 
 
 ---
 
-## Backend
+## Backend (Python)
 
-### Instalación
+### ⚙️ Instalación
 ```bash
 cd backend
 python3 -m venv venv
 source venv/bin/activate    # Windows: venv\\Scripts\\activate
-pip install -i requirements.txt
+pip install -r requirements.txt
 ```
 
-### Ejecución
+### ⚙️ Ejecución
 ```bash
 uvicorn api:app --reload
 ```
 - Documentación Swagger: http://localhost:8000/docs
 
+
+---
+
+## 📦 Estructura del Proyecto
+
+- **`api.py`**: aplicación principal FastAPI que integra todos los routers.
+- **`anomalies_endpoints.py`**: endpoints para detección de anomalías (fijos, adaptativos y clasificación).
+- **`metrics_endpoints.py`**: endpoints para cálculo de métricas OEE adaptadas.
+- **`readings_endpoints.py`**: endpoints CRUD de lecturas de sensores.
+- **`simulate_endpoints.py`**: endpoints para simulación de datos individuales y por escenarios.
+- **`simulator.py`**: motor de simulación de sensores con parámetros ajustables y memoria de estado.
+- **`storage.py`**: persistencia de datos en SQLite mediante pandas.
+- **`settings.py`**: configuración global de umbrales y constantes.
+- **`frontend/`**: interfaz React para interactuar con el backend.
+
+
 ### Endpoints
+## 🚀 Endpoints de la API
 
-#### Lecturas de sensores
-| Método | Ruta                      | Descripción                                |
-| ------ | ------------------------- | ------------------------------------------ |
-| GET    | `/readings`               | Retorna todas las lecturas.                |
-| GET    | `/readings/latest`        | Lectura más reciente.                      |
-| DELETE | `/readings`               | Elimina todas las lecturas.                |
-| POST   | `/simulate?hours=&users=` | Simula datos para `hours` horas y `users` usuarios. |
+### Lecturas de Sensores (`readings_endpoints.py`)
+- `GET /readings`
+  - Devuelve todas las lecturas almacenadas.
+- `GET /readings/latest`
+  - Devuelve la lectura más reciente de cada sensor.
+- `DELETE /readings`
+  - Elimina todas las lecturas.
 
-#### Detección de anomalías
-| Método | Ruta           | Descripción                                                   |
-| ------ | -------------- | ------------------------------------------------------------- |
-| GET    | `/anomalies`   | Detecta sobretemperaturas, inactividad, nivel bajo y consumo alto. |
+### Simulación (`simulate_endpoints.py`)
+- `POST /simulate?hours={h}&users={u}`
+  - Genera datos de simulación continuos durante `h` horas con `u` usuarios.
+- `POST /simulate_scenarios?duration_hours={d}`
+  - Recibe un array de configuraciones (`users`, `flow_rate`, `temp_setpoint`, `heater_regime`).
+  - Devuelve métricas agregadas (energía total, temperatura promedio) para cada escenario.
 
-#### Métricas (`/metrics/...`)
-| Ruta                                  | Parámetros             | Descripción                                                     |
-| ------------------------------------- | ---------------------- | --------------------------------------------------------------- |
-| `/metrics/availability`               | `start`, `end`         | % tiempo con flujo > 0.                                         |
-| `/metrics/performance`                | `users`, `hours`       | Litros reales vs esperados.                                     |
-| `/metrics/quality`                    | `start`, `end`         | % temperaturas dentro de ±1°C del setpoint.                     |
-| `/metrics/energy_efficiency`          | `start`, `end`         | kWh consumidos por litro dispensado.                            |
-| `/metrics/peak_flow_ratio`            | `users`                | Flujo máximo / flujo nominal por usuario.                       |
-| `/metrics/mtba`                       | —                      | Tiempo medio entre anomalías (minutos).                         |
-| `/metrics/level_uptime`               | `start`, `end`         | % tiempo nivel entre 20% y 100%.                                |
-| `/metrics/response_index`             | —                      | Minutos promedio hasta recuperación tras anomalía.              |
-| `/metrics/thermal_variation`          | `start`, `end`         | Desviación estándar de temperatura (°C).                        |
-| `/metrics/nonproductive_consumption`  | `start`, `end`         | kWh consumidos con flujo ≤ umbral de inactividad.               |
+### Detección de Anomalías (`anomalies_endpoints.py`)
+- `GET /anomalies/static`
+  - Umbrales fijos: sobretemperatura, inactividad, nivel bajo, consumo alto.
+- `GET /anomalies/adaptive?window={n}&sensor={s}`
+  - Umbrales adaptativos: detecta valores con z-score > 2 en ventana móvil de `n` lecturas.
+- `GET /anomalies/classify?window={n}&sensor={s}`
+  - Clasifica anomalías en `leakage`, `sensor_error`, `overuse`, `other`.
 
-Para incluir rutas de métricas en `api.py`:
-```python
-from api_metrics_endpoints import router as metrics_router
-app.include_router(metrics_router)
-```
+### Métricas de Desempeño (`metrics_endpoints.py`)
+- `GET /metrics/availability?start={t0}&end={t1}`
+  - Disponibilidad: % de tiempo con flujo > 0.
+- `GET /metrics/performance?users={u}&hours={h}`
+  - Rendimiento: litros reales vs. esperados.
+- `GET /metrics/quality?start={t0}&end={t1}`
+  - Calidad: % temperatura dentro de ±1°C del setpoint.
+- `GET /metrics/energy_efficiency?start={t0}&end={t1}`
+  - Eficiencia Energética: kWh/L.
+- `GET /metrics/thermal_variation?start={t0}&end={t1}`
+  - Variación Térmica: desviación estándar.
+- `GET /metrics/nonproductive_consumption?start={t0}&end={t1}`
+  - Consumo No Productivo: kWh en inactividad.
+- `GET /metrics/peak_flow_ratio?users={u}`
+  - Flujo Pico: max flujo / nominal.
+- `GET /metrics/mtba?window={n}&sensor={s}`
+  - MTBA: tiempo medio entre adaptativas.
+- `GET /metrics/response_index?window={n}&sensor={s}`
+  - Índice de Respuesta: minutos a recuperación.
 
 ---
 
 ## Frontend
 
-### Instalación y ejecución
+### ⚙️ Instalación y ejecución
 ```bash
 cd frontend
 npm install
@@ -84,34 +111,9 @@ npm start
 ```
 Abre http://localhost:3000.
 
-### Estructura de archivos
-
-- `index.js`: Renderiza `<App />` envuelto en `<BrowserRouter>`.
-- `App.jsx`: Menú de navegación y `<Routes>`.
-- `MainPage.jsx`: Página principal con enlaces.
-- `SimulatePage.jsx`: Simulación de uso, grilla de lecturas y limpieza de datos.
-- `AnalyticsPage.jsx`: Dashboard de gráficas con `AnalyticsDashboard.jsx`.
-- `AnomaliesPage.jsx`: Tablas agrupadas por sensor con `AnomaliesDashboard.jsx`.
-- `MetricsPage.jsx`: Dashboard de métricas con Radar y Gauges (`MetricsDashboard.jsx`).
 
 ---
 
-## Configuración del Simulador (`simulator.py`)
-
-Constantes configurables al inicio del archivo:
-- `AVG_FLOW_RATE_DEFAULT`: L/h por usuario.
-- `TIME_CONVERSION`: Conversión L/h → L/min.
-- `TEMPERATURE_MEAN`, `TEMPERATURE_VARIATION`: Parámetros de temperatura.
-- `LEVEL_MIN`, `LEVEL_MAX`: Rango de nivel de tanque (0–1).
-- `POWER_MIN`, `POWER_MAX`: Rango de potencia (kW).
-
-La función `generate_frame(timestamp, users, sensor, value)` permite:
-- `timestamp=None`: Usa hora UTC actual.
-- `sensor`: Generar solo ese sensor.
-- `value`: Anular valor simulado si no es `None`.
-
-
----
 
 Este README provee una revisión comprensible del proyecto, como instalar y correr, tanto el frontend como el backend. Además muestra un detalle de las APIs.
 Feliz monitoreo!  🚰📊
