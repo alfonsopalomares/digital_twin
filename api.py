@@ -52,12 +52,17 @@ def api_root():
             "performance": "/metrics/performance?users={n}&hours={h}",
             "quality": "/metrics/quality?start={ISO}&end={ISO}",
             "energy_efficiency": "/metrics/energy_efficiency?start={ISO}&end={ISO}",
-            "peak_flow_ratio": "/metrics/peak_flow_ratio?users={n}",
-            "mtba": "/metrics/mtba",
-            "level_uptime": "/metrics/level_uptime?start={ISO}&end={ISO}",
-            "response_index": "/metrics/response_index",
             "thermal_variation": "/metrics/thermal_variation?start={ISO}&end={ISO}",
-            "nonproductive_consumption": "/metrics/nonproductive_consumption?start={ISO}&end={ISO}"
+            "peak_flow_ratio": "/metrics/peak_flow_ratio?users={n}",
+            "mtba": "/metrics/mtba?window={n}&sensor={s}",
+            "level_uptime": "/metrics/level_uptime?start={ISO}&end={ISO}",
+            "response_index": "/metrics/response_index?window={n}&sensor={s}",
+            "nonproductive_consumption": "/metrics/nonproductive_consumption?start={ISO}&end={ISO}",
+            "mtbf": "/metrics/mtbf?start={ISO}&end={ISO}",
+            "quality_full": "/metrics/quality_full?start={ISO}&end={ISO}",
+            "response_time": "/metrics/response_time?start={ISO}&end={ISO}",
+            "failures_count": "/metrics/failures_count?weeks={n}",
+            "usage_rate": "/metrics/usage_rate?start={ISO}&end={ISO}"
         }
     }
 

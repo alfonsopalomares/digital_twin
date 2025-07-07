@@ -90,6 +90,40 @@ uvicorn api:app --reload
   - MTBA: tiempo medio entre adaptativas.
 - `GET /metrics/response_index?window={n}&sensor={s}`
   - Índice de Respuesta: minutos a recuperación.
+- `GET /metrics/mtbf?start={t0}&end={t1}`
+  - MTBF: tiempo medio entre fallas (horas).
+- `GET /metrics/quality_full?start={t0}&end={t1}`
+  - Calidad Completa: % servicios con temperatura y volumen correctos.
+- `GET /metrics/response_time?start={t0}&end={t1}`
+  - Tiempo de Respuesta: tiempo medio selección→dispensado (segundos).
+- `GET /metrics/failures_count?weeks={n}`
+  - Conteo de Fallas: número de fallas en las últimas `n` semanas.
+- `GET /metrics/usage_rate?start={t0}&end={t1}`
+  - Tasa de Uso: promedio de servicios por hora.
+
+---
+
+## 📊 Detalle de KPIs
+
+| Categoría            | KPI Sugerido                                       | Unidad / Método de Medición                   | Endpoint                          |
+| -------------------- | -------------------------------------------------- | --------------------------------------------- | --------------------------------- |
+| **Disponibilidad**   | % de tiempo operativo                              | (Tiempo operativo / Total disponible) × 100   | `/metrics/availability`           |
+| **Energía**          | Consumo por litro dispensado                       | kWh / L                                       | `/metrics/energy_efficiency`      |
+| **Mantenimiento**    | Tiempo medio entre fallas (MTBF)                   | Promedio de horas entre interrupciones        | `/metrics/mtbf` (nuevo)           |
+| **Calidad**          | % de servicios con temperatura y volumen correctos | (Servicios correctos / Total servicios) × 100 | `/metrics/quality_full` (nuevo)   |
+| **Tiempo de Respuesta** | Promedio de espera entre selección y dispensado    | Segundos                                      | `/metrics/response_time` (nuevo)  |
+| **Fallos**           | Número de fallos por semana                        | Conteo automático de errores                  | `/metrics/failures_count` (nuevo) |
+| **Uso**              | Promedio de servicios por franja horaria           | Servicios/hora (segmentado por turno)         | `/metrics/usage_rate` (nuevo)     |
+
+---
+
+## ⚙️ Componentes del OEE Adaptados
+
+| Componente     | Descripción                                                                | Fórmula                                            | Endpoint                |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------- | ----------------------- |
+| **Disponibilidad** | Tiempo que el equipo estuvo operativo respecto al tiempo total disponible  | (Tiempo operativo / Tiempo total disponible) × 100 | `/metrics/availability` |
+| **Rendimiento**    | Relación entre el volumen real dispensado y el volumen esperado            | (Volumen real dispensado / Volumen esperado) × 100 | `/metrics/performance`  |
+| **Calidad**        | Porcentaje de servicios correctamente ejecutados (temp. y flujo adecuados) | (Servicios correctos / Total servicios) × 100      | `/metrics/quality_full` |
 
 ---
 
