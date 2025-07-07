@@ -21,6 +21,7 @@ POWER_MIN = 0.0                # kW (minimum power draw)
 POWER_MAX = 10.0               # kW (maximum power draw)
 
 SETPOINT_TEMP_DEFAULT = 60.0   # °C, default temperature setpoint
+MIN_FLOW_THRESHOLD = 0.01      # L/min, minimum flow rate for a service
 HEATER_REGIME_DEFAULT = 0.1    # kW per °C error
 PIPE_LENGTH = 1.0              # m
 PIPE_DIAMETER = 0.02           # m

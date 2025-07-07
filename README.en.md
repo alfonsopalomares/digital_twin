@@ -90,6 +90,40 @@ uvicorn api:app --reload
   - MTBA: mean time between adaptive anomalies.
 - `GET /metrics/response_index?window={n}&sensor={s}`
   - Response Index: minutes to recovery.
+- `GET /metrics/mtbf?start={t0}&end={t1}`
+  - MTBF: mean time between failures (hours).
+- `GET /metrics/quality_full?start={t0}&end={t1}`
+  - Full Quality: % services with correct temperature and volume.
+- `GET /metrics/response_time?start={t0}&end={t1}`
+  - Response Time: average time selection→dispense (seconds).
+- `GET /metrics/failures_count?weeks={n}`
+  - Failures Count: number of failures in the last `n` weeks.
+- `GET /metrics/usage_rate?start={t0}&end={t1}`
+  - Usage Rate: average services per hour.
+
+---
+
+## 📊 KPI Details
+
+| Category           | Suggested KPI                                      | Unit / Measurement Method                       | Endpoint                          |
+| ------------------ | -------------------------------------------------- | ----------------------------------------------- | --------------------------------- |
+| **Availability**   | % of operational time                              | (Operational time / Total available) × 100     | `/metrics/availability`           |
+| **Energy**         | Consumption per dispensed liter                    | kWh / L                                        | `/metrics/energy_efficiency`      |
+| **Maintenance**    | Mean time between failures (MTBF)                 | Average hours between interruptions             | `/metrics/mtbf` (new)             |
+| **Quality**        | % of services with correct temperature and volume | (Correct services / Total services) × 100      | `/metrics/quality_full` (new)     |
+| **Response Time**  | Average wait time between selection and dispense  | Seconds                                        | `/metrics/response_time` (new)    |
+| **Failures**       | Number of failures per week                       | Automatic error counting                        | `/metrics/failures_count` (new)   |
+| **Usage**          | Average services per time slot                    | Services/hour (segmented by shift)             | `/metrics/usage_rate` (new)       |
+
+---
+
+## ⚙️ Adapted OEE Components
+
+| Component      | Description                                                                | Formula                                            | Endpoint                |
+| -------------- | -------------------------------------------------------------------------- | -------------------------------------------------- | ----------------------- |
+| **Availability** | Time the equipment was operational relative to total available time       | (Operational time / Total available time) × 100   | `/metrics/availability` |
+| **Performance**  | Relationship between actual dispensed volume and expected volume          | (Actual dispensed volume / Expected volume) × 100 | `/metrics/performance`  |
+| **Quality**      | Percentage of correctly executed services (temp. and flow adequate)       | (Correct services / Total services) × 100         | `/metrics/quality_full` |
 
 ---
 
