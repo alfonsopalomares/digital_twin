@@ -63,8 +63,21 @@ function SimulatePage() {
     level: { en: 'Level', es: 'Nivel' },
     power: { en: 'Power', es: 'Energía' },
   };
+  const sensorUnits = {
+    temperature: '°C',
+    flow: 'L/min',
+    level: '%',
+    power: 'kW',
+  };
   const t = key => (dict[key] ? dict[key][lang] : key);
   const labelSensor = key => (sensorLabels[key] ? sensorLabels[key][lang] : key);
+  const getSensorUnit = key => sensorUnits[key] || '';
+  const formatSensorValue = (sensor, value) => {
+    if (sensor === 'level') {
+      return `${(value * 100).toFixed(1)} ${getSensorUnit(sensor)}`;
+    }
+    return `${value} ${getSensorUnit(sensor)}`;
+  };
 
   const [readings, setReadings] = useState([]);
   const [hours, setHours] = useState(8);
@@ -217,7 +230,7 @@ function SimulatePage() {
             {sensorNames.map(s => (
               <div key={s} style={{ display: 'flex', alignItems: 'center', margin: '8px 0' }}>
                 <Switch checked={showSensorToggles[s]} onChange={checked => setShowSensorToggles(prev => ({ ...prev, [s]: checked }))} />
-                <span style={{ marginLeft: 8 }}>{labelSensor(s)}</span>
+                <span style={{ marginLeft: 8 }}>{labelSensor(s)} ({getSensorUnit(s)})</span>
               </div>
             ))}
           </div>
@@ -252,9 +265,9 @@ function SimulatePage() {
                   <tbody>
                     {sortedReadings.map((r, i) => (
                       <tr key={i}>
-                        <td style={thTdStyle}>{labelSensor(r.sensor)}</td>
+                        <td style={thTdStyle}>{labelSensor(r.sensor)} ({getSensorUnit(r.sensor)})</td>
                         <td style={thTdStyle}>{formatTimestamp(r.timestamp)}</td>
-                        <td style={thTdStyle}>{r.value}</td>
+                        <td style={thTdStyle}>{formatSensorValue(r.sensor, r.value)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -266,7 +279,7 @@ function SimulatePage() {
             showSensorToggles[s] ? (
               <div key={s} style={panelStyle}>
                 <h2>
-                  {t('sensor')}: {labelSensor(s)}
+                  {t('sensor')}: {labelSensor(s)} ({getSensorUnit(s)})
                 </h2>
                 <div style={tableContainerStyle}>
                   <table style={tableStyle}>
@@ -282,7 +295,7 @@ function SimulatePage() {
                         .map((r, idx) => (
                           <tr key={idx}>
                             <td style={thTdStyle}>{formatTimestamp(r.timestamp)}</td>
-                            <td style={thTdStyle}>{r.value}</td>
+                            <td style={thTdStyle}>{formatSensorValue(s, r.value)}</td>
                           </tr>
                         ))}
                     </tbody>

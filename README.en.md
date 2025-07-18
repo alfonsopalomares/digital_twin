@@ -75,7 +75,7 @@ uvicorn api:app --reload
 - `GET /metrics/availability?start={t0}&end={t1}`
   - Availability: % of time with flow > 0.
 - `GET /metrics/performance?users={u}&hours={h}`
-  - Performance: actual vs expected liters.
+  - Performance: ratio of actual vs expected liters (based on 0.008 L/min per user, drinking water only). 1.0 = exact, >1.0 = more than expected, <1.0 = less than expected.
 - `GET /metrics/quality?start={t0}&end={t1}`
   - Quality: % temperature within ±1°C of setpoint.
 - `GET /metrics/energy_efficiency?start={t0}&end={t1}`

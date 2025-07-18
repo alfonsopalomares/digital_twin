@@ -11,15 +11,20 @@ from storage import LocalStorage
 
 # === Configurable constants ===
 # Configuration constants:
-AVG_FLOW_RATE_DEFAULT = 0.5    # L/h per user (average flow rate)
-TIME_CONVERSION = 60.0         # minutes in an hour (for L/h to L/min)
+AVG_FLOW_RATE_DEFAULT = 0.008    # L/min per user (drinking water only - realistic office consumption)
+TIME_CONVERSION = 60.0         # minutes in an hour (for L/min to L/h conversion)
 TEMPERATURE_MEAN = 60.0        # °C (baseline temperature)
-TEMPERATURE_VARIATION = 1.0    # °C (± range for temperature simulation)
+TEMPERATURE_VARIATION = 5.0    # °C (± range for temperature simulation)
 LEVEL_MIN = 0.0                # lower bound for tank level (proportion)
 LEVEL_MAX = 1.0                # upper bound for tank level (proportion)
 POWER_MIN = 0.0                # kW (minimum power draw)
 POWER_MAX = 10.0               # kW (maximum power draw)
 
+# Physical parameters of a common pipe:
+PIPE_MIN_LPM = 10    # typical minimum flow rate in L/min
+PIPE_MAX_LPM = 30    # typical maximum flow rate in L/min
+FLOW_VARIATION_LPM = 5  # random variation ±5 L/min
+FLOW_VARIATION_FACTOR = 0.2  # random variation factor
 SETPOINT_TEMP_DEFAULT = 60.0   # °C, default temperature setpoint
 MIN_FLOW_THRESHOLD = 0.01      # L/min, minimum flow rate for a service
 HEATER_REGIME_DEFAULT = 0.1    # kW per °C error
@@ -118,8 +123,33 @@ class SensorSimulator:
         ts = timestamp if timestamp is not None else datetime.datetime.utcnow().isoformat()
 
         # calculate default values:
-        total_flow_lph = self.avg_flow_rate * users
-        flow_lpm = total_flow_lph / TIME_CONVERSION
+        # base_flow_lpm = (self.avg_flow_rate * users) / TIME_CONVERSION
+        # 2. Apply random variation and limit to physical pipe range
+        #flow_lpm = base_flow_lpm + random.uniform(-FLOW_VARIATION_LPM, FLOW_VARIATION_LPM)
+        #flow_lpm = max(PIPE_MIN_LPM, min(PIPE_MAX_LPM, flow_lpm))
+
+        #total_flow_lph = flow_lpm * TIME_CONVERSION
+
+        # total_flow_lph = self.avg_flow_rate * users
+
+        # Nominal flow in L/min (avg_flow_rate is already in L/min per user)
+        base_flow_lpm = self.avg_flow_rate * users
+
+        # Apply random variation and limit to physical pipe range
+        flow_lpm = base_flow_lpm * random.uniform(
+            1 - FLOW_VARIATION_FACTOR,
+            1 + FLOW_VARIATION_FACTOR
+        )
+
+        # Clamp to physical pipe range
+        flow_lpm = min(PIPE_MAX_LPM, flow_lpm)
+
+        # Avoid negative flows
+        flow_lpm = max(0.0, flow_lpm)
+
+        # Calculate total flow in L/h if needed
+        total_flow_lph = flow_lpm * TIME_CONVERSION
+
         temp_val = TEMPERATURE_MEAN + random.uniform(-TEMPERATURE_VARIATION, TEMPERATURE_VARIATION)
         level_val = random.uniform(LEVEL_MIN, LEVEL_MAX)
         power_val = random.uniform(POWER_MIN, POWER_MAX)
@@ -135,7 +165,7 @@ class SensorSimulator:
         # if a specific sensor override is requested, return only that
         if sensor:
             defaults = {
-                'flow': flow_lpm,
+                'flow': flow_lpm,  # Store flow in L/min
                 'temperature': temp_val,
                 'level': level_val,
                 'power': power_val,

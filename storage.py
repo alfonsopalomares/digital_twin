@@ -10,9 +10,11 @@ class LocalStorage:
     """
     def __init__(self, db_path: str = 'sensor_data.db'):
         self.conn = sqlite3.connect(db_path, check_same_thread=False)
-        self._create_table()
+        self._create_table_sensor()
+        self._create_table_config()
 
-    def _create_table(self):
+
+    def _create_table_sensor(self):
         c = self.conn.cursor()
         c.execute('''
             CREATE TABLE IF NOT EXISTS sensor_data (
@@ -24,6 +26,29 @@ class LocalStorage:
         ''')
         self.conn.commit()
 
+    def _create_table_config(self):
+        c = self.conn.cursor()
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS config (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_quantity INTEGER,
+                hours INTEGER
+            )
+        ''')
+        self.conn.commit()
+
+    def save_config(self, user_quantity: int, hours: int):
+        self.clear_config()
+        c = self.conn.cursor()
+        c.execute('INSERT INTO config (user_quantity, hours) VALUES (?, ?)', (user_quantity, hours))
+        self.conn.commit()
+
+    def get_config(self) -> Dict:
+        c = self.conn.cursor()
+        c.execute('SELECT user_quantity, hours FROM config ORDER BY id DESC LIMIT 1')
+        row = c.fetchone()
+        return {'user_quantity': row[0], 'hours': row[1]} if row else None
+    
     def save_batch(self, batch: List[Dict]):
         """
         Guarda un lote de lecturas de sensores en la base de datos.
@@ -70,6 +95,12 @@ class LocalStorage:
         row = c.fetchone()
         return {'sensor': row[0], 'timestamp': row[1], 'value': row[2]} if row else None
     
+    def clear_config(self) -> Dict:
+        c = self.conn.cursor()
+        c.execute('DELETE FROM config')
+        self.conn.commit()
+        return {'status': 'deleted'}
+    
     def clear_all(self) -> Dict:
         """
         Elimina todas las lecturas almacenadas.
@@ -77,5 +108,6 @@ class LocalStorage:
         """
         c = self.conn.cursor()
         c.execute('DELETE FROM sensor_data')
+        c.execute('DELETE FROM config')
         self.conn.commit()
         return {'status': 'deleted'}

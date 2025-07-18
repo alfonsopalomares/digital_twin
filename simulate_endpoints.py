@@ -45,6 +45,8 @@ async def simulate_usage(
     - If `value` is provided, it overrides the simulated value for the given sensor.
     - If `timestamp` is provided, it overrides the generated timestamp; otherwise current UTC is used.
     """
+    storage.clear_all()
+    storage.save_config(users, hours)
     total_minutes = hours * 60
     now = datetime.datetime.utcnow()
     for minute in range(total_minutes):
