@@ -21,73 +21,43 @@ Sistema de monitoreo en tiempo real para un expendedor de agua industrial, imple
 ## Endpoints de Métricas
 
 ### Métricas de Desempeño (`metrics_endpoints.py`)
-
-#### **1. Endpoint `mtba` (Mean Time Between Adaptive Anomalies)**
-- `GET /metrics/mtba?window={n}&sensor={s}`
-  - MTBA: tiempo medio entre anomalías adaptativas.
-  - Incluye estadísticas de intervalos, tasa de anomalías, distribución por sensor y estado cualitativo.
-
-#### **2. Endpoint `level_uptime`**
-- `GET /metrics/level_uptime?start={t0}&end={t1}`
-  - Level Uptime: % tiempo con nivel de agua aceptable.
-  - Incluye estadísticas de nivel, detección de overflow y estado cualitativo.
-
-#### **3. Endpoint `availability`**
 - `GET /metrics/availability?start={t0}&end={t1}`
   - Disponibilidad: % de tiempo con flujo > 0.
   - Incluye estadísticas de flujo, volumen total, distribución de lecturas y estado cualitativo.
-
-#### **4. Endpoint `performance`**
 - `GET /metrics/performance?users={u}&hours={h}`
   - Rendimiento: ratio de litros reales vs esperados.
   - Incluye eficiencia, déficit/excedente, estadísticas de flujo y estado cualitativo.
-
-#### **5. Endpoint `quality`**
 - `GET /metrics/quality?start={t0}&end={t1}`
   - Calidad: % temperatura dentro de ±5°C del setpoint (60°C).
   - Incluye estadísticas térmicas, desviaciones del setpoint y estado cualitativo.
-
-#### **6. Endpoint `response_index`**
-- `GET /metrics/response_index?window={n}&sensor={s}`
-  - Índice de Respuesta: tiempo promedio de respuesta a anomalías.
-  - Incluye estadísticas de respuesta, distribución por velocidad y estado cualitativo.
-
-#### **7. Endpoint `energy_efficiency`**
 - `GET /metrics/energy_efficiency?start={t0}&end={t1}`
   - Eficiencia Energética: kWh/L con valor esperado 0.051 kWh/L.
   - Incluye ratio vs esperado, consumos totales y estado cualitativo.
-
-#### **8. Endpoint `thermal_variation`**
 - `GET /metrics/thermal_variation?start={t0}&end={t1}`
   - Variación Térmica: desviación estándar de temperaturas.
   - Incluye estadísticas de temperatura, desviación del setpoint y estado cualitativo.
-
-#### **9. Endpoint `peak_flow_ratio`**
+- `GET /metrics/nonproductive_consumption?start={t0}&end={t1}`
+  - Consumo No Productivo: kWh en inactividad.
 - `GET /metrics/peak_flow_ratio?users={u}`
   - Flujo Pico: max flujo / nominal.
   - Incluye estadísticas de flujo, indicadores de capacidad y estado cualitativo.
-
-#### **10. Endpoint `nonproductive_consumption`**
-- `GET /metrics/nonproductive_consumption?start={t0}&end={t1}`
-  - Consumo No Productivo: kWh en inactividad.
-
-#### **11. Endpoint `mtbf` (Mean Time Between Failures)**
+- `GET /metrics/mtba?window={n}&sensor={s}`
+  - MTBA: tiempo medio entre anomalías adaptativas.
+  - Incluye estadísticas de intervalos, tasa de anomalías, distribución por sensor y estado cualitativo.
+- `GET /metrics/response_index?window={n}&sensor={s}`
+  - Índice de Respuesta: tiempo promedio de respuesta a anomalías.
+  - Incluye estadísticas de respuesta, distribución por velocidad y estado cualitativo.
+- `GET /metrics/level_uptime?start={t0}&end={t1}`
+  - Level Uptime: % tiempo con nivel de agua aceptable.
+  - Incluye estadísticas de nivel, detección de overflow y estado cualitativo.
 - `GET /metrics/mtbf?start={t0}&end={t1}`
   - MTBF: tiempo medio entre fallas (horas).
-
-#### **12. Endpoint `quality_full`**
 - `GET /metrics/quality_full?start={t0}&end={t1}`
   - Calidad Completa: % servicios con temperatura y volumen correctos.
-
-#### **13. Endpoint `response_time`**
 - `GET /metrics/response_time?start={t0}&end={t1}`
   - Tiempo de Respuesta: tiempo medio selección→dispensado (segundos).
-
-#### **14. Endpoint `failures_count`**
 - `GET /metrics/failures_count?weeks={n}`
   - Conteo de Fallas: número de fallas en las últimas `n` semanas.
-
-#### **15. Endpoint `usage_rate`**
 - `GET /metrics/usage_rate?start={t0}&end={t1}`
   - Tasa de Uso: promedio de servicios por hora.
 
@@ -526,6 +496,76 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 npm start
 ```
 Abre http://localhost:3000.
+
+### 📊 Dashboard de Métricas
+
+El dashboard de métricas proporciona una visualización interactiva y en tiempo real de todas las métricas del sistema. Cada métrica se presenta en un gauge circular con colores dinámicos que cambian según el estado de rendimiento.
+
+#### **Métricas Visualizadas:**
+
+**1. MTBA (Mean Time Between Adaptive Anomalies)**
+- Gauge que muestra tiempo promedio entre anomalías (minutos)
+- Metadatos: rango de intervalos, tasa de anomalías, distribución por sensor
+- Alertas: alta tasa de anomalías, estabilidad deficiente
+
+**2. Level Uptime**
+- Gauge que muestra porcentaje de tiempo con nivel aceptable
+- Metadatos: nivel promedio, variabilidad, distribución de lecturas
+- Alertas: niveles bajos prolongados, desbordamiento detectado
+
+**3. Availability**
+- Gauge que muestra porcentaje de tiempo con flujo activo
+- Metadatos: flujo promedio, volumen total, distribución de flujo
+- Alertas: tiempo alto de inactividad, utilización baja
+
+**4. Performance**
+- Gauge que muestra ratio de rendimiento (real vs esperado)
+- Metadatos: litros reales vs esperados, eficiencia, déficit/excedente
+- Alertas: déficit detectado, rendimiento crítico/pobre
+
+**5. Quality**
+- Gauge que muestra porcentaje de temperatura dentro de tolerancia
+- Metadatos: temperatura promedio, desviaciones del setpoint, distribución
+- Alertas: control deficiente de temperatura, desviación máxima excede tolerancia
+
+**6. Response Index**
+- Gauge que muestra tiempo promedio de respuesta a anomalías
+- Metadatos: rango de tiempos, distribución por velocidad, tasa de respuestas
+- Alertas: tiempo de respuesta deficiente, alto porcentaje de respuestas lentas
+
+**7. Energy Efficiency**
+- Gauge que muestra eficiencia energética (kWh/L)
+- Metadatos: valor esperado, ratio actual vs esperado, consumos totales
+- Alertas: eficiencia fuera de tolerancia
+
+**8. Thermal Variation**
+- Gauge que muestra variación térmica (desviación estándar)
+- Metadatos: temperatura promedio, desviación del setpoint, porcentaje dentro de tolerancia
+- Alertas: variación excesiva
+
+**9. Peak Flow Ratio**
+- Gauge que muestra ratio de flujo pico vs nominal
+- Metadatos: flujo máximo, promedio, nominal, indicadores de capacidad
+- Alertas: excede capacidad del tubo, por debajo del mínimo
+
+#### **Características del Dashboard:**
+
+**Sistema de Colores Dinámicos:**
+- 🟢 Verde: Estado 'excellent' (rendimiento excepcional)
+- 🔵 Azul: Estado 'good' (rendimiento bueno)
+- 🟡 Amarillo: Estado 'acceptable' (rendimiento aceptable)
+- 🟠 Naranja: Estado 'poor' (rendimiento deficiente)
+- 🔴 Rojo: Estado 'critical' (rendimiento crítico)
+
+**Alertas Inteligentes:**
+El sistema muestra advertencias automáticas para valores fuera de tolerancia, tasas de anomalías altas, estabilidad deficiente, niveles bajos prolongados, desbordamientos, tiempos de inactividad altos, utilización baja, déficits de rendimiento, control deficiente de temperatura, desviaciones excesivas, tiempos de respuesta deficientes y porcentajes altos de respuestas lentas.
+
+**Funcionalidades Avanzadas:**
+- Filtros temporales para análisis específicos
+- Filtros por sensor para análisis detallado
+- Metadatos expandibles con información detallada
+- Actualización en tiempo real de datos
+- Interfaz responsive para diferentes dispositivos
 
 ### Uso
 1. Iniciar el backend en `http://localhost:8000`
