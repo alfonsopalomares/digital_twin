@@ -953,12 +953,35 @@ async def get_response_index(
 ) -> MetricResponse:
     """
     Response Index: average minutes from adaptive anomaly to recovery.
+    
+    Measures the average time it takes for the system to recover from
+    adaptive anomalies detected using z-score analysis. Lower values
+    indicate faster response and better system resilience.
+    
+    Expected response time: < 5 minutes for good system responsiveness
+    Tolerance: < 10 minutes for acceptable system responsiveness
     """
+    # Constants for response index assessment
+    EXCELLENT_RESPONSE = 2.0     # minutes - excellent response time
+    GOOD_RESPONSE = 5.0          # minutes - good response time
+    ACCEPTABLE_RESPONSE = 10.0   # minutes - acceptable response time
+    
     anomalies = await classify_anomalies(sensor=sensor, window=window)
     if not anomalies:
-        return format_metric_response('response_index', 0.0, samples=0)
+        return format_metric_response('response_index', 0.0, expected_value=GOOD_RESPONSE, samples=0)
+    
     resp_times = []
     all_readings = storage.fetch_all()
+    
+    # Group anomalies by sensor for better analysis
+    sensor_anomalies = {}
+    for a in anomalies:
+        sname = a['sensor']
+        if sname not in sensor_anomalies:
+            sensor_anomalies[sname] = []
+        sensor_anomalies[sname].append(a)
+    
+    # Calculate response times for each anomaly
     for a in anomalies:
         sname = a['sensor']
         t0 = datetime.datetime.fromisoformat(a['timestamp'])
@@ -967,9 +990,102 @@ async def get_response_index(
                 t1 = datetime.datetime.fromisoformat(r['timestamp'])
                 resp_times.append((t1 - t0).total_seconds() / 60.0)
                 break
+    
     if not resp_times:
-        return format_metric_response('response_index', 0.0, samples=len(anomalies))
-    return format_metric_response('response_index', round(statistics.mean(resp_times), 2), samples=len(anomalies))
+        return format_metric_response('response_index', 0.0, expected_value=GOOD_RESPONSE, samples=len(anomalies))
+    
+    # Calculate response index statistics
+    avg_response_time = round(statistics.mean(resp_times), 2)
+    min_response_time = round(min(resp_times), 2) if resp_times else 0.0
+    max_response_time = round(max(resp_times), 2) if resp_times else 0.0
+    response_std = round(statistics.stdev(resp_times), 2) if len(resp_times) > 1 else 0.0
+    
+    # Determine response status
+    if avg_response_time <= EXCELLENT_RESPONSE:
+        response_status = 'excellent'
+    elif avg_response_time <= GOOD_RESPONSE:
+        response_status = 'good'
+    elif avg_response_time <= ACCEPTABLE_RESPONSE:
+        response_status = 'acceptable'
+    else:
+        response_status = 'poor'
+    
+    # Calculate response time distribution
+    fast_count = sum(1 for t in resp_times if t <= 2.0)  # ≤ 2 minutes
+    good_count = sum(1 for t in resp_times if 2.0 < t <= 5.0)  # 2-5 minutes
+    slow_count = sum(1 for t in resp_times if 5.0 < t <= 10.0)  # 5-10 minutes
+    very_slow_count = sum(1 for t in resp_times if t > 10.0)  # > 10 minutes
+    
+    total_responses = len(resp_times)
+    fast_percent = round((fast_count / total_responses) * 100, 1) if total_responses > 0 else 0.0
+    good_percent = round((good_count / total_responses) * 100, 1) if total_responses > 0 else 0.0
+    slow_percent = round((slow_count / total_responses) * 100, 1) if total_responses > 0 else 0.0
+    very_slow_percent = round((very_slow_count / total_responses) * 100, 1) if total_responses > 0 else 0.0
+    
+    # Calculate response variability
+    response_variability = round((response_std / avg_response_time) * 100, 1) if avg_response_time > 0 else 0.0
+    
+    # Calculate time span of analysis
+    if anomalies:
+        anomaly_times = [datetime.datetime.fromisoformat(a['timestamp']) for a in anomalies]
+        time_span_hours = round((max(anomaly_times) - min(anomaly_times)).total_seconds() / 3600.0, 2)
+    else:
+        time_span_hours = 0.0
+    
+    # Calculate response rate (responses per hour)
+    response_rate = round(total_responses / time_span_hours, 2) if time_span_hours > 0 else 0.0
+    
+    # Analyze response times by sensor
+    sensor_response_times = {}
+    for sname, sensor_anomaly_list in sensor_anomalies.items():
+        sensor_times = []
+        for a in sensor_anomaly_list:
+            t0 = datetime.datetime.fromisoformat(a['timestamp'])
+            for r in all_readings:
+                if r['sensor'] == sname and datetime.datetime.fromisoformat(r['timestamp']) > t0:
+                    t1 = datetime.datetime.fromisoformat(r['timestamp'])
+                    sensor_times.append((t1 - t0).total_seconds() / 60.0)
+                    break
+        if sensor_times:
+            sensor_response_times[sname] = round(statistics.mean(sensor_times), 2)
+    
+    # Prepare response with additional metadata
+    response = format_metric_response('response_index', avg_response_time, expected_value=GOOD_RESPONSE, samples=len(anomalies))
+    
+    # Add metadata useful for frontend visualization
+    response.update({
+        'min_response_time': min_response_time,
+        'max_response_time': max_response_time,
+        'response_std': response_std,
+        'response_variability': response_variability,
+        'response_status': response_status,
+        'time_span_hours': time_span_hours,
+        'response_rate': response_rate,
+        'fast_count': fast_count,
+        'good_count': good_count,
+        'slow_count': slow_count,
+        'very_slow_count': very_slow_count,
+        'fast_percent': fast_percent,
+        'good_percent': good_percent,
+        'slow_percent': slow_percent,
+        'very_slow_percent': very_slow_percent,
+        'excellent_threshold': EXCELLENT_RESPONSE,
+        'good_threshold': GOOD_RESPONSE,
+        'acceptable_threshold': ACCEPTABLE_RESPONSE,
+        'window_size': window
+    })
+    
+    # Add sensor-specific response times
+    for sensor_name, avg_time in sensor_response_times.items():
+        response[f'response_time_{sensor_name}'] = avg_time
+    
+    # Add filtered sensor info
+    if sensor:
+        response['filtered_sensor'] = sensor
+    else:
+        response['filtered_sensor'] = 'all'
+    
+    return response
 
 @router.get("/nonproductive_consumption", summary="Nonproductive Consumption: kWh when flow ≤ threshold")
 def get_nonproductive_consumption(

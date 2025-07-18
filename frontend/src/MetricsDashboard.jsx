@@ -225,6 +225,10 @@ export function MetricsDashboard() {
                       metric.key === 'quality' && metricData?.quality_status === 'good' ? "#17a2b8" :
                       metric.key === 'quality' && metricData?.quality_status === 'acceptable' ? "#ffc107" :
                       metric.key === 'quality' && metricData?.quality_status === 'poor' ? "#dc3545" :
+                      metric.key === 'response_index' && metricData?.response_status === 'excellent' ? "#28a745" :
+                      metric.key === 'response_index' && metricData?.response_status === 'good' ? "#17a2b8" :
+                      metric.key === 'response_index' && metricData?.response_status === 'acceptable' ? "#ffc107" :
+                      metric.key === 'response_index' && metricData?.response_status === 'poor' ? "#dc3545" :
                       "#82ca9d"
                     } 
                   />
@@ -479,6 +483,56 @@ export function MetricsDashboard() {
                       {metricData.performance_status === 'poor' && (
                         <div style={{ color: '#fd7e14', fontWeight: 'bold' }}>
                           ⚠️ Poor performance - below acceptable threshold
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {/* Enhanced Response Index metadata */}
+                  {metric.key === 'response_index' && metricData.min_response_time && (
+                    <>
+                      <div>Range: {metricData.min_response_time} - {metricData.max_response_time} min</div>
+                      <div>Std Dev: {metricData.response_std} min</div>
+                      <div>Variability: {metricData.response_variability}%</div>
+                      <div style={{ 
+                        fontWeight: 'bold',
+                        color: metricData.response_status === 'excellent' ? '#28a745' :
+                               metricData.response_status === 'good' ? '#17a2b8' :
+                               metricData.response_status === 'acceptable' ? '#ffc107' : '#dc3545'
+                      }}>
+                        Status: {metricData.response_status?.toUpperCase() || 'UNKNOWN'}
+                      </div>
+                      <div>Response Rate: {metricData.response_rate}/hour</div>
+                      <div>Time Span: {metricData.time_span_hours} hours</div>
+                      <div>Window: {metricData.window_size} samples</div>
+                      <div>Fast (≤2min): {metricData.fast_percent}% ({metricData.fast_count} responses)</div>
+                      <div>Good (2-5min): {metricData.good_percent}% ({metricData.good_count} responses)</div>
+                      <div>Slow (5-10min): {metricData.slow_percent}% ({metricData.slow_count} responses)</div>
+                      <div>Very Slow (&gt;10min): {metricData.very_slow_percent}% ({metricData.very_slow_count} responses)</div>
+                      {metricData.response_time_power && (
+                        <div>Power: {metricData.response_time_power} min avg</div>
+                      )}
+                      {metricData.response_time_flow && (
+                        <div>Flow: {metricData.response_time_flow} min avg</div>
+                      )}
+                      {metricData.response_time_level && (
+                        <div>Level: {metricData.response_time_level} min avg</div>
+                      )}
+                      {metricData.response_time_temperature && (
+                        <div>Temperature: {metricData.response_time_temperature} min avg</div>
+                      )}
+                      {metricData.filtered_sensor && metricData.filtered_sensor !== 'all' && (
+                        <div style={{ color: '#17a2b8', fontWeight: 'bold' }}>
+                          Filtered: {metricData.filtered_sensor}
+                        </div>
+                      )}
+                      {metricData.response_status === 'poor' && (
+                        <div style={{ color: '#dc3545', fontWeight: 'bold' }}>
+                          ⚠️ Poor response time - system needs attention
+                        </div>
+                      )}
+                      {metricData.very_slow_percent > 50 && (
+                        <div style={{ color: '#ffc107', fontWeight: 'bold' }}>
+                          ⚠️ High percentage of very slow responses: {metricData.very_slow_percent}%
                         </div>
                       )}
                     </>
