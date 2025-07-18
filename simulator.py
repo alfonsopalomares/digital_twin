@@ -1,4 +1,4 @@
-# -*- coding: utf-8 =====
+# -*- coding: utf-8 -*-
 """
 Stateful Sensor Simulator for a water dispenser with real-time adjustable parameters
 and batch scenario simulation.
@@ -8,75 +8,36 @@ import datetime
 import math
 from typing import List, Dict, Optional
 from storage import LocalStorage
-
-# === Configurable constants ===
-# Configuration constants:
-AVG_FLOW_RATE_DEFAULT = 0.008    # L/min per user (drinking water only - realistic office consumption)
-TIME_CONVERSION = 60.0         # minutes in an hour (for L/min to L/h conversion)
-TEMPERATURE_MEAN = 60.0        # °C (baseline temperature)
-TEMPERATURE_VARIATION = 5.0    # °C (± range for temperature simulation)
-LEVEL_MIN = 0.0                # lower bound for tank level (proportion)
-LEVEL_MAX = 1.0                # upper bound for tank level (proportion)
-POWER_MIN = 0.0                # kW (minimum power draw)
-POWER_MAX = 10.0               # kW (maximum power draw)
-
-# Physical parameters of a common pipe:
-PIPE_MIN_LPM = 10    # typical minimum flow rate in L/min
-PIPE_MAX_LPM = 30    # typical maximum flow rate in L/min
-FLOW_VARIATION_LPM = 5  # random variation ±5 L/min
-FLOW_VARIATION_FACTOR = 0.2  # random variation factor
-SETPOINT_TEMP_DEFAULT = 60.0   # °C, default temperature setpoint
-MIN_FLOW_THRESHOLD = 0.01      # L/min, minimum flow rate for a service
-HEATER_REGIME_DEFAULT = 0.1    # kW per °C error
-PIPE_LENGTH = 1.0              # m
-PIPE_DIAMETER = 0.02           # m
-WATER_DENSITY = 997.0          # kg/m³
-WATER_VISCOSITY = 0.001        # Pa·s
-GRAVITY = 9.81                 # m/s²
-PIPE_DELAY_SEC = 5             # s
-TANK_CAPACITY_L = 20.0         # liters
-TANK_SEGMENTS = 5              # thermal layers
-HEATER_POWER_MAX = 10.0        # kW
-HEATER_EFFICIENCY = 0.8        # fraction
-CP_WATER = 4.186               # kJ/kg·°C
-T_AMBIENT = 25.0               # °C
-CONVECTION_COEFF = 5.0         # W/m²·°C
-SURFACE_AREA = 0.5             # m²
-THERMAL_DIFFUSIVITY = 1e-7     # m²/s
-SENSOR_NOISE_STD = {
-    'flow': 0.005,
-    'temperature': 0.1,
-    'level': 0.002,
-    'power': 0.1
-}
-DEGRADATION_FACTOR = 0.0001    # per minute
+from settings import (
+    AVG_FLOW_RATE_DEFAULT, TIME_CONVERSION, TEMPERATURE_MEAN, TEMPERATURE_VARIATION,
+    LEVEL_MIN, LEVEL_MAX, POWER_MIN, POWER_MAX, PIPE_MIN_LPM, PIPE_MAX_LPM,
+    FLOW_VARIATION_LPM, FLOW_VARIATION_FACTOR, SETPOINT_TEMP_DEFAULT, MIN_FLOW_THRESHOLD,
+    HEATER_REGIME_DEFAULT, PIPE_LENGTH, PIPE_DIAMETER, WATER_DENSITY, WATER_VISCOSITY,
+    GRAVITY, PIPE_DELAY_SEC, TANK_CAPACITY_L, TANK_SEGMENTS, HEATER_POWER_MAX,
+    HEATER_EFFICIENCY, CP_WATER, T_AMBIENT, CONVECTION_COEFF, SURFACE_AREA,
+    THERMAL_DIFFUSIVITY, SENSOR_NOISE_STD, DEGRADATION_FACTOR
+)
 
 class SensorSimulator:
-    _instance = None
-    def __new__(cls, *args, **kwargs):
-        # Singleton: ensure only one simulator instance persists
-        if cls._instance is None:
-            cls._instance = super(SensorSimulator, cls).__new__(cls)
-        return cls._instance
-
     """
-    Stateful simulator with advanced physics and persistent parameters.
-    ...
-    Extends previous stateful simulator with:
-    - Real-time adjustable avg_flow_rate, temp_setpoint, heater_regime
-    - Batch simulation for scenario comparisons
+    Stateless simulator that uses storage config for parameters.
+    Each instance is independent and uses the latest config from storage.
     """
 
     def __init__(self,
-                 avg_flow_rate: float = AVG_FLOW_RATE_DEFAULT,
-                 temp_setpoint: float = SETPOINT_TEMP_DEFAULT,
-                 heater_regime: float = HEATER_REGIME_DEFAULT):
-        # adjustable parameters
-        self.avg_flow_rate = avg_flow_rate
-        self.temp_setpoint = temp_setpoint
-        self.heater_regime = heater_regime  # kW per °C error
-        # load state
+                 avg_flow_rate: float = None,
+                 temp_setpoint: float = None,
+                 heater_regime: float = None):
+        # Load config from storage or use provided values
         self.storage = LocalStorage()
+        config = self.storage.get_config()
+        
+        # Use provided values, then config values, then defaults
+        self.avg_flow_rate = avg_flow_rate if avg_flow_rate is not None else (config.get('avg_flow_rate') if config else AVG_FLOW_RATE_DEFAULT)
+        self.temp_setpoint = temp_setpoint if temp_setpoint is not None else (config.get('temp_setpoint') if config else SETPOINT_TEMP_DEFAULT)
+        self.heater_regime = heater_regime if heater_regime is not None else (config.get('heater_regime') if config else HEATER_REGIME_DEFAULT)
+        
+        # Load state from storage
         readings = self.storage.fetch_all()
         # init level
         level_readings = [r for r in readings if r['sensor']=='level']
@@ -90,16 +51,31 @@ class SensorSimulator:
 
     # --- Real-time adjusters ---
     def set_flow_rate(self, new_rate: float):
-        """Adjust average flow rate on the fly"""
+        """Adjust average flow rate and save to config"""
         self.avg_flow_rate = new_rate
+        self._update_config()
 
     def set_temp_setpoint(self, new_setpoint: float):
-        """Adjust temperature setpoint on the fly"""
+        """Adjust temperature setpoint and save to config"""
         self.temp_setpoint = new_setpoint
+        self._update_config()
 
     def set_heater_regime(self, new_regime: float):
-        """Adjust heater regime (kW per °C error) on the fly"""
+        """Adjust heater regime and save to config"""
         self.heater_regime = new_regime
+        self._update_config()
+        
+    def _update_config(self):
+        """Update storage config with current simulator parameters"""
+        config = self.storage.get_config()
+        if config:
+            self.storage.save_config(
+                user_quantity=config['user_quantity'],
+                hours=config['hours'],
+                avg_flow_rate=self.avg_flow_rate,
+                temp_setpoint=self.temp_setpoint,
+                heater_regime=self.heater_regime
+            )
 
     def generate_frame(
         self,
@@ -120,7 +96,7 @@ class SensorSimulator:
         :return: list of readings (dicts with sensor, timestamp, value).
         """
         # determine timestamp:
-        ts = timestamp if timestamp is not None else datetime.datetime.utcnow().isoformat()
+        ts = timestamp if timestamp is not None else datetime.datetime.now(datetime.UTC).isoformat()
 
         # calculate default values:
         # base_flow_lpm = (self.avg_flow_rate * users) / TIME_CONVERSION
@@ -194,11 +170,11 @@ class SensorSimulator:
         """
         results = []
         for cfg in configs:
-            # clone simulator for isolation
+            # create new simulator instance for isolation
             sim = SensorSimulator(
-                avg_flow_rate=cfg.get('flow_rate', self.avg_flow_rate),
-                temp_setpoint=cfg.get('temp_setpoint', self.temp_setpoint),
-                heater_regime=cfg.get('heater_regime', self.heater_regime)
+                avg_flow_rate=cfg.get('flow_rate'),
+                temp_setpoint=cfg.get('temp_setpoint'),
+                heater_regime=cfg.get('heater_regime')
             )
             total_energy = 0.0
             temp_sum = 0.0

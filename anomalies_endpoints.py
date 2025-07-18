@@ -10,7 +10,7 @@ from settings import *
 router = APIRouter(prefix="/anomalies", tags=["anomalies"])
 
 # Adaptive threshold parameters
-Z_THRESHOLD = 2.0  # anomalies beyond ±2 standard deviations
+Z_THRESHOLD = 1.5  # anomalies beyond ±1.5 standard deviations (more sensitive)
 
 # Modelo de anomalía
 class Anomaly(BaseModel):
@@ -40,11 +40,11 @@ def get_anomalies():
         s, ts, val = r["sensor"], r["timestamp"], r["value"]
 
         if s == "temperature":
-            if abs(val - temperature_setpoint) > TMP_TOLERANCE:
+            if abs(val - SETPOINT_TEMP_DEFAULT) > TMP_TOLERANCE:
                 anomalies.append({
                     "sensor": s, "timestamp": ts, "value": val,
                     "type": "Overtemperature",
-                    "detail": f"Temperature {val}°C outside ±{TMP_TOLERANCE}°C of setpoint"
+                    "detail": f"Temperature {val}°C outside ±{TMP_TOLERANCE}°C of setpoint {SETPOINT_TEMP_DEFAULT}°C"
                 })
 
         elif s == "flow":
@@ -81,29 +81,69 @@ def get_anomalies():
 @router.get("/adaptive", summary="Adaptive Threshold Anomaly Detection")
 async def adaptive_anomalies(
     sensor: Optional[str] = Query(None, description="Filter by sensor name"),
-    window: int = Query(60, ge=1, description="Rolling window size (in readings)")
+    window: int = Query(20, ge=5, description="Rolling window size (in readings)")
 ) -> List[dict]:
     """
     Detect anomalies using adaptive thresholds (rolling mean ± Z_THRESHOLD * std).
     Returns entries where |z-score| > Z_THRESHOLD.
+    
+    Algorithm:
+    1. Calculate rolling mean and standard deviation over the specified window
+    2. Compute z-score for each reading: (value - mean) / std
+    3. Flag as anomaly if |z-score| > Z_THRESHOLD (default: 2.0)
+    
+    This method adapts to the local behavior of each sensor, making it more
+    sensitive to sudden changes than fixed thresholds.
     """
     storage = LocalStorage()
     readings = storage.fetch_all()
     if not readings:
         raise HTTPException(status_code=404, detail="No readings available")
+    
     df = pd.DataFrame(readings)
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     df = df.sort_values('timestamp')
+    
     if sensor:
         df = df[df['sensor'] == sensor]
+    
     if df.empty:
         return []
-    df['mean'] = df['value'].rolling(window=window, min_periods=1).mean()
-    df['std'] = df['value'].rolling(window=window, min_periods=1).std().fillna(0)
-    df['z'] = (df['value'] - df['mean']) / df['std'].replace(0, 1)
-    df['anomaly'] = df['z'].abs() > Z_THRESHOLD
-    anomalies = df[df['anomaly']]
-    return anomalies[['sensor', 'timestamp', 'value', 'mean', 'std', 'z']].to_dict(orient='records')
+    
+    # Group by sensor to calculate statistics per sensor
+    anomalies_list = []
+    
+    for sensor_name in df['sensor'].unique():
+        sensor_df = df[df['sensor'] == sensor_name].copy()
+        
+        # Calculate rolling statistics
+        sensor_df['mean'] = sensor_df['value'].rolling(window=window, min_periods=window//2).mean()
+        sensor_df['std'] = sensor_df['value'].rolling(window=window, min_periods=window//2).std().fillna(0)
+        
+        # Handle zero standard deviation (constant values)
+        # Use a small fraction of the mean as minimum std to avoid division by zero
+        min_std = sensor_df['value'].mean() * 0.01  # 1% of mean as minimum std
+        sensor_df['std'] = sensor_df['std'].replace(0, min_std)
+        
+        # Calculate z-scores
+        sensor_df['z'] = (sensor_df['value'] - sensor_df['mean']) / sensor_df['std']
+        
+        # Detect anomalies
+        sensor_df['anomaly'] = sensor_df['z'].abs() > Z_THRESHOLD
+        sensor_anomalies = sensor_df[sensor_df['anomaly']]
+        
+        # Add to results
+        for _, row in sensor_anomalies.iterrows():
+            anomalies_list.append({
+                'sensor': row['sensor'],
+                'timestamp': row['timestamp'].isoformat(),
+                'value': row['value'],
+                'mean': row['mean'],
+                'std': row['std'],
+                'z': row['z']
+            })
+    
+    return anomalies_list
 
 @router.get("/classify", summary="Classify Detected Anomalies")
 async def classify_anomalies(

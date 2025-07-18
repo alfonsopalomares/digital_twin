@@ -32,22 +32,34 @@ class LocalStorage:
             CREATE TABLE IF NOT EXISTS config (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_quantity INTEGER,
-                hours INTEGER
+                hours INTEGER,
+                avg_flow_rate REAL,
+                temp_setpoint REAL,
+                heater_regime REAL
             )
         ''')
         self.conn.commit()
 
-    def save_config(self, user_quantity: int, hours: int):
+    def save_config(self, user_quantity: int, hours: int, avg_flow_rate: float = None, temp_setpoint: float = None, heater_regime: float = None):
         self.clear_config()
         c = self.conn.cursor()
-        c.execute('INSERT INTO config (user_quantity, hours) VALUES (?, ?)', (user_quantity, hours))
+        c.execute('INSERT INTO config (user_quantity, hours, avg_flow_rate, temp_setpoint, heater_regime) VALUES (?, ?, ?, ?, ?)', 
+                 (user_quantity, hours, avg_flow_rate, temp_setpoint, heater_regime))
         self.conn.commit()
 
     def get_config(self) -> Dict:
         c = self.conn.cursor()
-        c.execute('SELECT user_quantity, hours FROM config ORDER BY id DESC LIMIT 1')
+        c.execute('SELECT user_quantity, hours, avg_flow_rate, temp_setpoint, heater_regime FROM config ORDER BY id DESC LIMIT 1')
         row = c.fetchone()
-        return {'user_quantity': row[0], 'hours': row[1]} if row else None
+        if row:
+            return {
+                'user_quantity': row[0], 
+                'hours': row[1],
+                'avg_flow_rate': row[2],
+                'temp_setpoint': row[3],
+                'heater_regime': row[4]
+            }
+        return None
     
     def save_batch(self, batch: List[Dict]):
         """

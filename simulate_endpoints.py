@@ -29,7 +29,7 @@ class ScenarioResult(BaseModel):
     avg_temperature: Optional[float]
 
 
-@router.post('/simulate')
+@router.post('/')
 async def simulate_usage(
     hours: int = Query(8, ge=1, description="Simulation duration in hours"),
     users: int = Query(10, ge=1, description="Number of active users"),
@@ -46,9 +46,15 @@ async def simulate_usage(
     - If `timestamp` is provided, it overrides the generated timestamp; otherwise current UTC is used.
     """
     storage.clear_all()
-    storage.save_config(users, hours)
+    storage.save_config(
+        user_quantity=users,
+        hours=hours,
+        avg_flow_rate=AVG_FLOW_RATE_DEFAULT,
+        temp_setpoint=SETPOINT_TEMP_DEFAULT,
+        heater_regime=HEATER_REGIME_DEFAULT
+    )
     total_minutes = hours * 60
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.UTC)
     for minute in range(total_minutes):
         ts = timestamp or (now + datetime.timedelta(minutes=minute)).isoformat()
         # Pass sensor and value overrides into generate_frame

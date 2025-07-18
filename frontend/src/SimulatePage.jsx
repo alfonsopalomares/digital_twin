@@ -150,7 +150,7 @@ function SimulatePage() {
   const handleSimulate = async () => {
     const now = new Date();
     try {
-      await fetch(`${apiBase}/simulate/simulate?hours=${hours}&users=${users}`, { method: 'POST' });
+      await fetch(`${apiBase}/simulate?hours=${hours}&users=${users}`, { method: 'POST' });
       const res = await fetch(`${apiBase}/readings/readings`);
       setReadings(await res.json());
       const utc = now.toISOString();

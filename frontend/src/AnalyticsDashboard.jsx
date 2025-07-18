@@ -16,7 +16,7 @@ const TEMP_THRESHOLD       = 85.0;   // °C
 const FLOW_IDLE_THRESHOLD  = 0.002;  // L/min
 const FLOW_LEAK_THRESHOLD  = 0.05;   // L/min
 const LEVEL_LOW_THRESHOLD  = 0.20;   // proporción
-const POWER_HIGH_THRESHOLD = 8.0;    // kW
+const POWER_HIGH_THRESHOLD = 6.5;    // kW
 
 const API_BASE = 'http://localhost:8000';
 
