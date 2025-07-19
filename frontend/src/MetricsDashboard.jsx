@@ -24,7 +24,12 @@ const METRICS = [
   { key: 'level_uptime',       gaugeMax: 100, isPercentage: true },
   { key: 'response_index',     gaugeMax: 60, isPercentage: false },
   { key: 'thermal_variation',  gaugeMax: 10, isPercentage: false },
-  { key: 'nonproductive_consumption', gaugeMax: 1, isPercentage: false }
+  { key: 'nonproductive_consumption', gaugeMax: 1, isPercentage: false },
+  { key: 'failures_count', gaugeMax: 100, isPercentage: true },
+  { key: 'usage_rate', gaugeMax: 100, isPercentage: true },
+  { key: 'response_time', gaugeMax: 100, isPercentage: true },
+  { key: 'quality_full', gaugeMax: 100, isPercentage: true },
+  { key: 'mtbf', gaugeMax: 100, isPercentage: false },
 ];
 
 export function MetricsDashboard() {
@@ -59,7 +64,7 @@ export function MetricsDashboard() {
     response_index: { en: 'Response Index', es: 'Índice de Respuesta' },
     nonproductive_consumption: { en: 'Nonproductive Consumption', es: 'Consumo No Productivo' },
     mtbf: { en: 'Mean Time Between Failures', es: 'Tiempo Medio Entre Fallas' },
-    quality_full: { en: 'Full Quality', es: 'Calidad Completa' },
+    quality_full: { en: 'Full Quality', es: 'Calidad Integral' },
     response_time: { en: 'Average Response Time', es: 'Tiempo de Respuesta Promedio' },
     failures_count: { en: 'Failures Count', es: 'Conteo de Fallas' },
     usage_rate: { en: 'Usage Rate', es: 'Tasa de Uso' }
@@ -184,6 +189,95 @@ export function MetricsDashboard() {
           return (
             <div key={metric.key} style={{ border:'1px solid #ccc', borderRadius:8, padding:12, background:'#f9f9f9' }}>
               <h4 style={{ margin:0, textAlign:'center' }}>{title}</h4>
+              {/* Status indicator - prominently displayed */}
+              {metricData && (
+                <div style={{ 
+                  textAlign: 'center', 
+                  marginTop: 4, 
+                  marginBottom: 8,
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  fontWeight: 'bold',
+                  fontSize: '12px',
+                  color: 'white',
+                  backgroundColor: 
+                    metric.key === 'quality' && metricData?.quality_status === 'excellent' ? '#28a745' :
+                    metric.key === 'quality' && metricData?.quality_status === 'good' ? '#17a2b8' :
+                    metric.key === 'quality' && metricData?.quality_status === 'acceptable' ? '#ffc107' :
+                    metric.key === 'quality' && metricData?.quality_status === 'poor' ? '#dc3545' :
+                    metric.key === 'energy_efficiency' && metricData?.efficiency_status === 'excellent' ? '#28a745' :
+                    metric.key === 'energy_efficiency' && metricData?.efficiency_status === 'good' ? '#17a2b8' :
+                    metric.key === 'energy_efficiency' && metricData?.efficiency_status === 'poor' ? '#ffc107' :
+                    metric.key === 'energy_efficiency' && metricData?.efficiency_status === 'critical' ? '#dc3545' :
+                    metric.key === 'thermal_variation' && metricData?.variation_status === 'excellent' ? '#28a745' :
+                    metric.key === 'thermal_variation' && metricData?.variation_status === 'good' ? '#17a2b8' :
+                    metric.key === 'thermal_variation' && metricData?.variation_status === 'acceptable' ? '#ffc107' :
+                    metric.key === 'thermal_variation' && metricData?.variation_status === 'poor' ? '#dc3545' :
+                    metric.key === 'peak_flow_ratio' && metricData?.ratio_status === 'excellent' ? '#28a745' :
+                    metric.key === 'peak_flow_ratio' && metricData?.ratio_status === 'good' ? '#17a2b8' :
+                    metric.key === 'peak_flow_ratio' && metricData?.ratio_status === 'acceptable' ? '#ffc107' :
+                    metric.key === 'peak_flow_ratio' && metricData?.ratio_status === 'excessive' ? '#dc3545' :
+                    metric.key === 'mtba' && metricData?.mtba_status === 'excellent' ? '#28a745' :
+                    metric.key === 'mtba' && metricData?.mtba_status === 'good' ? '#17a2b8' :
+                    metric.key === 'mtba' && metricData?.mtba_status === 'acceptable' ? '#ffc107' :
+                    metric.key === 'mtba' && metricData?.mtba_status === 'poor' ? '#dc3545' :
+                    metric.key === 'level_uptime' && metricData?.uptime_status === 'excellent' ? '#28a745' :
+                    metric.key === 'level_uptime' && metricData?.uptime_status === 'good' ? '#17a2b8' :
+                    metric.key === 'level_uptime' && metricData?.uptime_status === 'acceptable' ? '#ffc107' :
+                    metric.key === 'level_uptime' && metricData?.uptime_status === 'poor' ? '#dc3545' :
+                    metric.key === 'availability' && metricData?.availability_status === 'excellent' ? '#28a745' :
+                    metric.key === 'availability' && metricData?.availability_status === 'good' ? '#17a2b8' :
+                    metric.key === 'availability' && metricData?.availability_status === 'acceptable' ? '#ffc107' :
+                    metric.key === 'availability' && metricData?.availability_status === 'poor' ? '#dc3545' :
+                    metric.key === 'performance' && metricData?.performance_status === 'excellent' ? '#28a745' :
+                    metric.key === 'performance' && metricData?.performance_status === 'good' ? '#17a2b8' :
+                    metric.key === 'performance' && metricData?.performance_status === 'acceptable' ? '#ffc107' :
+                    metric.key === 'performance' && metricData?.performance_status === 'poor' ? '#fd7e14' :
+                    metric.key === 'performance' && metricData?.performance_status === 'critical' ? '#dc3545' :
+                    metric.key === 'response_index' && metricData?.response_status === 'excellent' ? '#28a745' :
+                    metric.key === 'response_index' && metricData?.response_status === 'good' ? '#17a2b8' :
+                    metric.key === 'response_index' && metricData?.response_status === 'acceptable' ? '#ffc107' :
+                    metric.key === 'response_index' && metricData?.response_status === 'poor' ? '#dc3545' :
+                    metric.key === 'nonproductive_consumption' && metricData?.consumption_status === 'excellent' ? '#28a745' :
+                    metric.key === 'nonproductive_consumption' && metricData?.consumption_status === 'good' ? '#17a2b8' :
+                    metric.key === 'nonproductive_consumption' && metricData?.consumption_status === 'acceptable' ? '#ffc107' :
+                    metric.key === 'nonproductive_consumption' && metricData?.consumption_status === 'poor' ? '#dc3545' :
+                    metric.key === 'mtbf' && metricData?.reliability_status === 'excellent' ? '#28a745' :
+                    metric.key === 'mtbf' && metricData?.reliability_status === 'good' ? '#17a2b8' :
+                    metric.key === 'mtbf' && metricData?.reliability_status === 'acceptable' ? '#ffc107' :
+                    metric.key === 'mtbf' && metricData?.reliability_status === 'poor' ? '#dc3545' :
+                    metric.key === 'quality_full' && metricData?.quality_status === 'excellent' ? '#28a745' :
+                    metric.key === 'quality_full' && metricData?.quality_status === 'good' ? '#17a2b8' :
+                    metric.key === 'quality_full' && metricData?.quality_status === 'acceptable' ? '#ffc107' :
+                    metric.key === 'quality_full' && metricData?.quality_status === 'poor' ? '#dc3545' :
+                    metric.key === 'response_time' && metricData?.responsiveness_status === 'excellent' ? '#28a745' :
+                    metric.key === 'response_time' && metricData?.responsiveness_status === 'good' ? '#17a2b8' :
+                    metric.key === 'response_time' && metricData?.responsiveness_status === 'acceptable' ? '#ffc107' :
+                    metric.key === 'response_time' && metricData?.responsiveness_status === 'poor' ? '#dc3545' :
+                    metric.key === 'failures_count' && metricData?.reliability_status === 'excellent' ? '#28a745' :
+                    metric.key === 'failures_count' && metricData?.reliability_status === 'good' ? '#17a2b8' :
+                    metric.key === 'failures_count' && metricData?.reliability_status === 'acceptable' ? '#ffc107' :
+                    metric.key === 'failures_count' && metricData?.reliability_status === 'poor' ? '#dc3545' :
+                    '#6c757d'
+                }}>
+                  {metric.key === 'quality' && metricData?.quality_status ? metricData.quality_status.toUpperCase() :
+                   metric.key === 'energy_efficiency' && metricData?.efficiency_status ? metricData.efficiency_status.toUpperCase() :
+                   metric.key === 'thermal_variation' && metricData?.variation_status ? metricData.variation_status.toUpperCase() :
+                   metric.key === 'peak_flow_ratio' && metricData?.ratio_status ? metricData.ratio_status.toUpperCase() :
+                   metric.key === 'mtba' && metricData?.mtba_status ? metricData.mtba_status.toUpperCase() :
+                   metric.key === 'level_uptime' && metricData?.uptime_status ? metricData.uptime_status.toUpperCase() :
+                   metric.key === 'availability' && metricData?.availability_status ? metricData.availability_status.toUpperCase() :
+                   metric.key === 'performance' && metricData?.performance_status ? metricData.performance_status.toUpperCase() :
+                   metric.key === 'response_index' && metricData?.response_status ? metricData.response_status.toUpperCase() :
+                   metric.key === 'nonproductive_consumption' && metricData?.consumption_status ? metricData.consumption_status.toUpperCase() :
+                   metric.key === 'mtbf' && metricData?.reliability_status ? metricData.reliability_status.toUpperCase() :
+                   metric.key === 'quality_full' && metricData?.quality_status ? metricData.quality_status.toUpperCase() :
+                   metric.key === 'response_time' && metricData?.responsiveness_status ? metricData.responsiveness_status.toUpperCase() :
+                   metric.key === 'failures_count' && metricData?.reliability_status ? metricData.reliability_status.toUpperCase() :
+                   metric.key === 'usage_rate' && metricData?.utilization_status ? metricData.utilization_status.toUpperCase() :
+                   'N/A'}
+                </div>
+              )}
               <ResponsiveContainer width="100%" height={150}>
                 <RadialBarChart innerRadius="80%" outerRadius="100%" data={gaugeData} startAngle={180} endAngle={0}>
                   <RadialBar 
@@ -229,6 +323,31 @@ export function MetricsDashboard() {
                       metric.key === 'response_index' && metricData?.response_status === 'good' ? "#17a2b8" :
                       metric.key === 'response_index' && metricData?.response_status === 'acceptable' ? "#ffc107" :
                       metric.key === 'response_index' && metricData?.response_status === 'poor' ? "#dc3545" :
+                      metric.key === 'nonproductive_consumption' && metricData?.consumption_status === 'excellent' ? "#28a745" :
+                      metric.key === 'nonproductive_consumption' && metricData?.consumption_status === 'good' ? "#17a2b8" :
+                      metric.key === 'nonproductive_consumption' && metricData?.consumption_status === 'acceptable' ? "#ffc107" :
+                      metric.key === 'nonproductive_consumption' && metricData?.consumption_status === 'poor' ? "#dc3545" :
+                      metric.key === 'mtbf' && metricData?.reliability_status === 'excellent' ? "#28a745" :
+                      metric.key === 'mtbf' && metricData?.reliability_status === 'good' ? "#17a2b8" :
+                      metric.key === 'mtbf' && metricData?.reliability_status === 'acceptable' ? "#ffc107" :
+                      metric.key === 'mtbf' && metricData?.reliability_status === 'poor' ? "#dc3545" :
+                      metric.key === 'quality_full' && metricData?.quality_status === 'excellent' ? "#28a745" :
+                      metric.key === 'quality_full' && metricData?.quality_status === 'good' ? "#17a2b8" :
+                      metric.key === 'quality_full' && metricData?.quality_status === 'acceptable' ? "#ffc107" :
+                      metric.key === 'quality_full' && metricData?.quality_status === 'poor' ? "#dc3545" :
+                      metric.key === 'response_time' && metricData?.responsiveness_status === 'excellent' ? "#28a745" :
+                      metric.key === 'response_time' && metricData?.responsiveness_status === 'good' ? "#17a2b8" :
+                      metric.key === 'response_time' && metricData?.responsiveness_status === 'acceptable' ? "#ffc107" :
+                      metric.key === 'response_time' && metricData?.responsiveness_status === 'poor' ? "#dc3545" :
+                      metric.key === 'failures_count' && metricData?.reliability_status === 'excellent' ? "#28a745" :
+                      metric.key === 'failures_count' && metricData?.reliability_status === 'good' ? "#17a2b8" :
+                      metric.key === 'failures_count' && metricData?.reliability_status === 'acceptable' ? "#ffc107" :
+                      metric.key === 'failures_count' && metricData?.reliability_status === 'poor' ? "#dc3545" :
+                      metric.key === 'usage_rate' && metricData?.utilization_status === 'excellent' ? "#28a745" :
+                      metric.key === 'usage_rate' && metricData?.utilization_status === 'good' ? "#17a2b8" :
+                      metric.key === 'usage_rate' && metricData?.utilization_status === 'acceptable' ? "#ffc107" :
+                      metric.key === 'usage_rate' && metricData?.utilization_status === 'low' ? "#fd7e14" :
+                      metric.key === 'usage_rate' && metricData?.utilization_status === 'poor' ? "#dc3545" :
                       "#82ca9d"
                     } 
                   />
@@ -253,8 +372,6 @@ export function MetricsDashboard() {
                   {/* Enhanced quality metadata */}
                   {metric.key === 'quality' && metricData.setpoint && (
                     <>
-                      <div>Setpoint: {metricData.setpoint}°C</div>
-                      <div>Tolerance: ±{metricData.tolerance_band/2}°C</div>
                       <div>Average: {metricData.avg_temp}°C</div>
                       <div>Range: {metricData.min_temp}°C - {metricData.max_temp}°C</div>
                       <div style={{ 
@@ -265,20 +382,10 @@ export function MetricsDashboard() {
                       }}>
                         Status: {metricData.quality_status?.toUpperCase() || 'UNKNOWN'}
                       </div>
-                      <div>Variability: {metricData.temp_variability}%</div>
-                      <div>Avg Deviation: {metricData.avg_deviation}°C</div>
-                      <div>Max Deviation: {metricData.max_deviation}°C</div>
-                      <div>Low Temp: {metricData.low_percent}% ({metricData.low_count} readings)</div>
-                      <div>Within Range: {metricData.within_percent}% ({metricData.within_count} readings)</div>
-                      <div>High Temp: {metricData.high_percent}% ({metricData.high_count} readings)</div>
+                      <div>Within Range: {metricData.within_percent}%</div>
                       {metricData.quality_status === 'poor' && (
                         <div style={{ color: '#dc3545', fontWeight: 'bold' }}>
                           ⚠️ Poor temperature control
-                        </div>
-                      )}
-                      {metricData.max_deviation > metricData.tolerance_band/2 && (
-                        <div style={{ color: '#ffc107', fontWeight: 'bold' }}>
-                          ⚠️ Maximum deviation exceeds tolerance
                         </div>
                       )}
                     </>
@@ -286,8 +393,6 @@ export function MetricsDashboard() {
                   {/* Enhanced energy efficiency metadata */}
                   {metric.key === 'energy_efficiency' && metricData.expected_value && (
                     <>
-                      <div>Expected: {metricData.expected_value} kWh/L</div>
-                      <div>Tolerance: ±{metricData.tolerance_band/2} kWh/L</div>
                       <div style={{ 
                         fontWeight: 'bold',
                         color: metricData.efficiency_status === 'excellent' ? '#28a745' :
@@ -310,8 +415,6 @@ export function MetricsDashboard() {
                   {metric.key === 'thermal_variation' && metricData.avg_temperature && (
                     <>
                       <div>Average: {metricData.avg_temperature}°C</div>
-                      <div>Range: {metricData.min_temperature}°C - {metricData.max_temperature}°C</div>
-                      <div>Setpoint: {metricData.setpoint}°C</div>
                       <div style={{ 
                         fontWeight: 'bold',
                         color: metricData.variation_status === 'excellent' ? '#28a745' :
@@ -321,14 +424,12 @@ export function MetricsDashboard() {
                         Status: {metricData.variation_status?.toUpperCase() || 'UNKNOWN'}
                       </div>
                       <div>Within tolerance: {metricData.within_tolerance_percent}%</div>
-                      <div>Deviation: {metricData.setpoint_deviation}°C</div>
                     </>
                   )}
                   {/* Enhanced peak flow ratio metadata */}
                   {metric.key === 'peak_flow_ratio' && metricData.max_flow && (
                     <>
                       <div>Max Flow: {metricData.max_flow} L/min</div>
-                      <div>Avg Flow: {metricData.avg_flow} L/min</div>
                       <div>Nominal: {metricData.nominal_flow} L/min</div>
                       <div style={{ 
                         fontWeight: 'bold',
@@ -338,16 +439,9 @@ export function MetricsDashboard() {
                       }}>
                         Status: {metricData.ratio_status?.toUpperCase() || 'UNKNOWN'}
                       </div>
-                      <div>Above nominal: {metricData.above_nominal_percent}%</div>
-                      <div>Variability: {metricData.flow_variability}%</div>
                       {metricData.exceeds_pipe_capacity && (
                         <div style={{ color: '#dc3545', fontWeight: 'bold' }}>
                           ⚠️ Exceeds pipe capacity
-                        </div>
-                      )}
-                      {metricData.below_pipe_minimum && (
-                        <div style={{ color: '#ffc107', fontWeight: 'bold' }}>
-                          ⚠️ Below pipe minimum
                         </div>
                       )}
                     </>
@@ -355,9 +449,6 @@ export function MetricsDashboard() {
                   {/* Enhanced MTBA metadata */}
                   {metric.key === 'mtba' && metricData.min_interval && (
                     <>
-                      <div>Min Interval: {metricData.min_interval} min</div>
-                      <div>Max Interval: {metricData.max_interval} min</div>
-                      <div>Std Dev: {metricData.interval_std} min</div>
                       <div>Anomaly Rate: {metricData.anomaly_rate}/hour</div>
                       <div style={{ 
                         fontWeight: 'bold',
@@ -368,19 +459,6 @@ export function MetricsDashboard() {
                         Status: {metricData.mtba_status?.toUpperCase() || 'UNKNOWN'}
                       </div>
                       <div>Time Span: {metricData.time_span_hours} hours</div>
-                      <div>Window: {metricData.window_size} samples</div>
-                      {metricData.sensor_count_power && (
-                        <div>Power: {metricData.sensor_count_power} anomalies</div>
-                      )}
-                      {metricData.sensor_count_flow && (
-                        <div>Flow: {metricData.sensor_count_flow} anomalies</div>
-                      )}
-                      {metricData.sensor_count_level && (
-                        <div>Level: {metricData.sensor_count_level} anomalies</div>
-                      )}
-                      {metricData.sensor_count_temperature && (
-                        <div>Temperature: {metricData.sensor_count_temperature} anomalies</div>
-                      )}
                       {metricData.filtered_sensor && metricData.filtered_sensor !== 'all' && (
                         <div style={{ color: '#17a2b8', fontWeight: 'bold' }}>
                           Filtered: {metricData.filtered_sensor}
@@ -392,8 +470,6 @@ export function MetricsDashboard() {
                   {metric.key === 'level_uptime' && metricData.avg_level && (
                     <>
                       <div>Average Level: {metricData.avg_level * 100}%</div>
-                      <div>Range: {metricData.min_level * 100}% - {metricData.max_level * 100}%</div>
-                      <div>Low Threshold: {metricData.low_threshold * 100}%</div>
                       <div style={{ 
                         fontWeight: 'bold',
                         color: metricData.uptime_status === 'excellent' ? '#28a745' :
@@ -402,17 +478,10 @@ export function MetricsDashboard() {
                       }}>
                         Status: {metricData.uptime_status?.toUpperCase() || 'UNKNOWN'}
                       </div>
-                      <div>Variability: {metricData.level_variability}%</div>
-                      <div>Low Level: {metricData.low_percent}% ({metricData.low_count} readings)</div>
-                      <div>Normal Level: {metricData.normal_percent}% ({metricData.normal_count} readings)</div>
+                      <div>Low Level: {metricData.low_percent}%</div>
                       {metricData.high_count > 0 && (
                         <div style={{ color: '#dc3545', fontWeight: 'bold' }}>
-                          ⚠️ Overflow: {metricData.high_percent}% ({metricData.high_count} readings)
-                        </div>
-                      )}
-                      {metricData.low_percent > 10 && (
-                        <div style={{ color: '#ffc107', fontWeight: 'bold' }}>
-                          ⚠️ High low-level time: {metricData.low_percent}%
+                          ⚠️ Overflow: {metricData.high_percent}%
                         </div>
                       )}
                     </>
@@ -421,8 +490,6 @@ export function MetricsDashboard() {
                   {metric.key === 'availability' && metricData.avg_flow && (
                     <>
                       <div>Average Flow: {metricData.avg_flow} L/min</div>
-                      <div>Flow Range: {metricData.min_flow} - {metricData.max_flow} L/min</div>
-                      <div>Total Volume: {metricData.total_volume} L</div>
                       <div style={{ 
                         fontWeight: 'bold',
                         color: metricData.availability_status === 'excellent' ? '#28a745' :
@@ -431,18 +498,11 @@ export function MetricsDashboard() {
                       }}>
                         Status: {metricData.availability_status?.toUpperCase() || 'UNKNOWN'}
                       </div>
-                      <div>Flow Variability: {metricData.flow_variability}%</div>
-                      <div>Zero Flow: {metricData.zero_percent}% ({metricData.zero_count} readings)</div>
-                      <div>Low Flow: {metricData.low_percent}% ({metricData.low_count} readings)</div>
-                      <div>Normal Flow: {metricData.normal_percent}% ({metricData.normal_count} readings)</div>
+                      <div>Total Volume: {metricData.total_volume} L</div>
+                      <div>Zero Flow: {metricData.zero_percent}%</div>
                       {metricData.zero_percent > 50 && (
                         <div style={{ color: '#dc3545', fontWeight: 'bold' }}>
-                          ⚠️ High idle time: {metricData.zero_percent}%
-                        </div>
-                      )}
-                      {metricData.availability_status === 'poor' && (
-                        <div style={{ color: '#dc3545', fontWeight: 'bold' }}>
-                          ⚠️ Low system utilization
+                          ⚠️ High idle time
                         </div>
                       )}
                     </>
@@ -450,8 +510,6 @@ export function MetricsDashboard() {
                   {/* Enhanced Performance metadata */}
                   {metric.key === 'performance' && metricData.actual_liters && (
                     <>
-                      <div>Actual: {metricData.actual_liters} L</div>
-                      <div>Expected: {metricData.expected_liters} L</div>
                       <div>Efficiency: {metricData.efficiency_percent}%</div>
                       <div style={{ 
                         fontWeight: 'bold',
@@ -462,27 +520,11 @@ export function MetricsDashboard() {
                       }}>
                         Status: {metricData.performance_status?.toUpperCase() || 'UNKNOWN'}
                       </div>
-                      <div>Flow Rate: {metricData.achieved_flow_rate} L/min (configured: {metricData.configured_flow_rate} L/min)</div>
-                      <div>Flow Range: {metricData.min_flow} - {metricData.max_flow} L/min</div>
-                      <div>Flow Variability: {metricData.flow_variability}%</div>
+                      <div>Actual: {metricData.actual_liters} L</div>
+                      <div>Expected: {metricData.expected_liters} L</div>
                       {metricData.deficit_liters > 0 && (
                         <div style={{ color: '#ffc107', fontWeight: 'bold' }}>
-                          ⚠️ Deficit: {metricData.deficit_liters} L below expected
-                        </div>
-                      )}
-                      {metricData.surplus_liters > 0 && (
-                        <div style={{ color: '#28a745', fontWeight: 'bold' }}>
-                          ✅ Surplus: {metricData.surplus_liters} L above expected
-                        </div>
-                      )}
-                      {metricData.performance_status === 'critical' && (
-                        <div style={{ color: '#dc3545', fontWeight: 'bold' }}>
-                          ⚠️ Critical performance below minimum acceptable
-                        </div>
-                      )}
-                      {metricData.performance_status === 'poor' && (
-                        <div style={{ color: '#fd7e14', fontWeight: 'bold' }}>
-                          ⚠️ Poor performance - below acceptable threshold
+                          ⚠️ Deficit: {metricData.deficit_liters} L
                         </div>
                       )}
                     </>
@@ -490,9 +532,6 @@ export function MetricsDashboard() {
                   {/* Enhanced Response Index metadata */}
                   {metric.key === 'response_index' && metricData.min_response_time && (
                     <>
-                      <div>Range: {metricData.min_response_time} - {metricData.max_response_time} min</div>
-                      <div>Std Dev: {metricData.response_std} min</div>
-                      <div>Variability: {metricData.response_variability}%</div>
                       <div style={{ 
                         fontWeight: 'bold',
                         color: metricData.response_status === 'excellent' ? '#28a745' :
@@ -503,23 +542,6 @@ export function MetricsDashboard() {
                       </div>
                       <div>Response Rate: {metricData.response_rate}/hour</div>
                       <div>Time Span: {metricData.time_span_hours} hours</div>
-                      <div>Window: {metricData.window_size} samples</div>
-                      <div>Fast (≤2min): {metricData.fast_percent}% ({metricData.fast_count} responses)</div>
-                      <div>Good (2-5min): {metricData.good_percent}% ({metricData.good_count} responses)</div>
-                      <div>Slow (5-10min): {metricData.slow_percent}% ({metricData.slow_count} responses)</div>
-                      <div>Very Slow (&gt;10min): {metricData.very_slow_percent}% ({metricData.very_slow_count} responses)</div>
-                      {metricData.response_time_power && (
-                        <div>Power: {metricData.response_time_power} min avg</div>
-                      )}
-                      {metricData.response_time_flow && (
-                        <div>Flow: {metricData.response_time_flow} min avg</div>
-                      )}
-                      {metricData.response_time_level && (
-                        <div>Level: {metricData.response_time_level} min avg</div>
-                      )}
-                      {metricData.response_time_temperature && (
-                        <div>Temperature: {metricData.response_time_temperature} min avg</div>
-                      )}
                       {metricData.filtered_sensor && metricData.filtered_sensor !== 'all' && (
                         <div style={{ color: '#17a2b8', fontWeight: 'bold' }}>
                           Filtered: {metricData.filtered_sensor}
@@ -527,12 +549,134 @@ export function MetricsDashboard() {
                       )}
                       {metricData.response_status === 'poor' && (
                         <div style={{ color: '#dc3545', fontWeight: 'bold' }}>
-                          ⚠️ Poor response time - system needs attention
+                          ⚠️ Poor response time
                         </div>
                       )}
-                      {metricData.very_slow_percent > 50 && (
-                        <div style={{ color: '#ffc107', fontWeight: 'bold' }}>
-                          ⚠️ High percentage of very slow responses: {metricData.very_slow_percent}%
+                    </>
+                  )}
+                  {/* Enhanced Nonproductive Consumption metadata */}
+                  {metric.key === 'nonproductive_consumption' && metricData.total_energy && (
+                    <>
+                      <div style={{ 
+                        fontWeight: 'bold',
+                        color: metricData.consumption_status === 'excellent' ? '#28a745' :
+                               metricData.consumption_status === 'good' ? '#17a2b8' :
+                               metricData.consumption_status === 'acceptable' ? '#ffc107' : '#dc3545'
+                      }}>
+                        Status: {metricData.consumption_status?.toUpperCase() || 'UNKNOWN'}
+                      </div>
+                      <div>Total Energy: {metricData.total_energy} kWh</div>
+                      <div>Nonproductive: {metricData.nonprod_percent}%</div>
+                      <div>Consumption Rate: {metricData.consumption_rate} kWh/hour</div>
+                      {metricData.consumption_status === 'poor' && (
+                        <div style={{ color: '#dc3545', fontWeight: 'bold' }}>
+                          ⚠️ High nonproductive consumption
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {/* Enhanced MTBF metadata */}
+                  {metric.key === 'mtbf' && metricData.total_failures && (
+                    <>
+                      <div style={{ 
+                        fontWeight: 'bold',
+                        color: metricData.reliability_status === 'excellent' ? '#28a745' :
+                               metricData.reliability_status === 'good' ? '#17a2b8' :
+                               metricData.reliability_status === 'acceptable' ? '#ffc107' : '#dc3545'
+                      }}>
+                        Reliability Status: {metricData.reliability_status?.toUpperCase() || 'UNKNOWN'}
+                      </div>
+                      <div>Total Failures: {metricData.total_failures}</div>
+                      <div>Failure Rate: {metricData.failure_rate} failures/hour</div>
+                      <div>Time Span: {metricData.time_span_hours} hours</div>
+                      {metricData.reliability_status === 'poor' && (
+                        <div style={{ color: '#dc3545', fontWeight: 'bold' }}>
+                          ⚠️ Frequent failures
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {/* Enhanced Quality Full metadata */}
+                  {metric.key === 'quality_full' && metricData.correct_services_count !== undefined && (
+                    <>
+                      <div style={{ 
+                        fontWeight: 'bold',
+                        color: metricData.quality_status === 'excellent' ? '#28a745' :
+                               metricData.quality_status === 'good' ? '#17a2b8' :
+                               metricData.quality_status === 'acceptable' ? '#ffc107' : '#dc3545'
+                      }}>
+                        Quality Status: {metricData.quality_status?.toUpperCase() || 'UNKNOWN'}
+                      </div>
+                      <div>Correct Services: {metricData.correct_services_count} ({metricData.value}%)</div>
+                      <div>Service Rate: {metricData.service_rate} services/hour</div>
+                      <div>Time Span: {metricData.time_span_hours} hours</div>
+                      {metricData.quality_status === 'poor' && (
+                        <div style={{ color: '#dc3545', fontWeight: 'bold' }}>
+                          ⚠️ Poor service quality
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {/* Enhanced Response Time metadata */}
+                  {metric.key === 'response_time' && metricData.total_responses && (
+                    <>
+                      <div style={{ 
+                        fontWeight: 'bold',
+                        color: metricData.responsiveness_status === 'excellent' ? '#28a745' :
+                               metricData.responsiveness_status === 'good' ? '#17a2b8' :
+                               metricData.responsiveness_status === 'acceptable' ? '#ffc107' : '#dc3545'
+                      }}>
+                        Responsiveness Status: {metricData.responsiveness_status?.toUpperCase() || 'UNKNOWN'}
+                      </div>
+                      <div>Total Responses: {metricData.total_responses}</div>
+                      <div>Response Rate: {metricData.response_rate} responses/hour</div>
+                      <div>Time Span: {metricData.time_span_hours} hours</div>
+                      {metricData.responsiveness_status === 'poor' && (
+                        <div style={{ color: '#dc3545', fontWeight: 'bold' }}>
+                          ⚠️ Slow response times
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {/* Enhanced Failures Count metadata */}
+                  {metric.key === 'failures_count' && metricData.total_failures !== undefined && (
+                    <>
+                      <div style={{ 
+                        fontWeight: 'bold',
+                        color: metricData.reliability_status === 'excellent' ? '#28a745' :
+                               metricData.reliability_status === 'good' ? '#17a2b8' :
+                               metricData.reliability_status === 'acceptable' ? '#ffc107' : '#dc3545'
+                      }}>
+                        Reliability Status: {metricData.reliability_status?.toUpperCase() || 'UNKNOWN'}
+                      </div>
+                      <div>Total Failures: {metricData.total_failures}</div>
+                      <div>Failures per Week: {metricData.failures_per_week}</div>
+                      <div>Time Span: {metricData.time_span_hours} hours</div>
+                      {metricData.reliability_status === 'poor' && (
+                        <div style={{ color: '#dc3545', fontWeight: 'bold' }}>
+                          ⚠️ High failure rate
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {/* Enhanced Usage Rate metadata */}
+                  {metric.key === 'usage_rate' && metricData.total_services !== undefined && (
+                    <>
+                      <div style={{ 
+                        fontWeight: 'bold',
+                        color: metricData.utilization_status === 'excellent' ? '#28a745' :
+                               metricData.utilization_status === 'good' ? '#17a2b8' :
+                               metricData.utilization_status === 'acceptable' ? '#ffc107' :
+                               metricData.utilization_status === 'low' ? '#fd7e14' : '#dc3545'
+                      }}>
+                        Utilization Status: {metricData.utilization_status?.toUpperCase() || 'UNKNOWN'}
+                      </div>
+                      <div>Total Services: {metricData.total_services}</div>
+                      <div>Services per Day: {metricData.services_per_day}</div>
+                      <div>Time Span: {metricData.time_span_hours} hours</div>
+                      {metricData.utilization_status === 'poor' && (
+                        <div style={{ color: '#dc3545', fontWeight: 'bold' }}>
+                          ⚠️ Very low usage rate
                         </div>
                       )}
                     </>
