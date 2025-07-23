@@ -4,8 +4,7 @@ import threading
 import json
 from typing import Dict
 import pandas as pd
-from digital_twin_api_client import DigitalTwinApiClient
-
+from api_digital_twin import DigitalTwinApiClient
 
 PATH_JSON = "datos.json"
 
@@ -20,7 +19,7 @@ class DataGetter():
     
     def actualizar(self) -> bool:
         ahora = datetime.now()
-        print(f"actualizar {ahora}")
+        # print(f"actualizar {ahora}")
         
         if self.ult_act is None or (ahora - self.ult_act) > timedelta(minutes=self.intervalo):
             if self.cliente_online():

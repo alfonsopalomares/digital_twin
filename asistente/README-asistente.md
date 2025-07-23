@@ -8,7 +8,7 @@ Aplicación Dash que integra un agente LLM con visualizaciones en Plotly y consu
 Para ejecutar el asistente correctamente, necesitás configurar un entorno con los siguientes paquetes principales:
 🔧 Requisitos mínimos
  - Python >=3.9
- - LangChain >=0.3.0
+ - LangChain >=0.3
  - Dash >=2.15.0
  - Dash Table
  - Dash Bootstrap Components >=1.5.0
@@ -17,15 +17,30 @@ Para ejecutar el asistente correctamente, necesitás configurar un entorno con l
  - dotenv
  - requests
 
-se pueden instalar lso paques con:
+se pueden instalar los paquetes con:
 ```bash
-pip install langchain dash dash-table dash-bootstrap-components pandas plotly dotenv requests
+pip install langchain==0.3 dash-bootstrap-components pandas plotly dotenv
+```
+
+El archivo `requirement.txt` puede usarse para instalar una combinacion de versiones compatibles.
+```bash
+pip install -r requirements.txt
 ```
 
 Dependiendo del modelo que uses en chat_llm.py, puede que necesites paquetes adicionales. En la prueba se usaron:
+ 
  - *OpenAI / OpenRouter* corresponde `langchain-openai`
  - *Google Vertex / Gemini* corresponde `langchain-google-genai`
+ 
+En *Google AI Studio* obtenerse una API Key gratuita en el siguiente [link](https://aistudio.google.com/apikey) usando una cuenta de Google
 
+asegurarse de que el paquete elegido conserve la compatibilidad con la version de LangChain, por ejemplo:
+```bash
+pip install langchain==0.3 langchain-openai
+pip install langchain==0.3 langchain-google-genai
+```
+
+---
 ## Cómo iniciar la aplicación
 
 Asegurate de tener instaladas las dependencias necesarias (`dash`, `dash-bootstrap-components`, `langchain`, etc.) y luego ejecutá:
@@ -34,7 +49,7 @@ Asegurate de tener instaladas las dependencias necesarias (`dash`, `dash-bootstr
 python dash_asistente.py
 ```
 
-La aplicación se abrirá en tu navegador en http://127.0.0.1:8050/.
+La aplicación se abrirá en tu navegador en http://127.0.0.1:3100/.
 
 ## Configuración de API Keys
 
@@ -43,7 +58,7 @@ Antes de iniciar, editá el archivo `.env` para incluir las credenciales del pro
 ## Estructura del proyecto
 
 ```
-try_agent/
+asistente/
 ├── dash_asistente.py     # App principal Dash
 ├── chat_llm.py           # Selección y conexión al modelo LLM
 ├── chat_asistente.py     # Definición del agente y herramientas
